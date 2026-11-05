@@ -9,5 +9,8 @@ class Settings(BaseSettings):
     wialon_base_url: str
     wialon_token: str
 
+    status_moving_speed_kmh: float = 5.0
+    status_offline_minutes: int = 60
+
 
 settings = Settings()

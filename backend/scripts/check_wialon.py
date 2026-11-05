@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 from app.core.config import settings
 from app.integrations.wialon.client import WialonClient
@@ -17,15 +18,15 @@ async def main() -> None:
                     "sortType": "sys_name",
                 },
                 "force": 1,
-                "flags": 1,
+                "flags": 1025,
                 "from": 0,
                 "to": 0,
             },
         )
         units = result.get("items", [])
         print(f"Units found: {len(units)}")
-        for unit in units[:5]:
-            print(f"- {unit['id']}: {unit['nm']}")
+        with_position = next((u for u in units if u.get("pos")), None)
+        print(json.dumps(with_position, indent=2))
     finally:
         await client.close()
 

@@ -1,10 +1,44 @@
+from collections.abc import AsyncIterator
 from datetime import timedelta
+from typing import Annotated
 
-from fastapi import Request
+from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.exceptions import AuthenticationError
+from app.core.security import ACCESS, decode_token
+from app.db.models import User
+from app.db.session import SessionLocal
 from app.integrations.wialon.units_gateway import WialonUnitGateway
+from app.repositories.user_repository import UserRepository
 from app.services.vehicle_service import VehicleService
+
+ACCESS_COOKIE = "access_token"
+REFRESH_COOKIE = "refresh_token"
+
+
+async def get_db() -> AsyncIterator[AsyncSession]:
+    async with SessionLocal() as session:
+        yield session
+
+
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+
+async def get_current_user(request: Request, db: DbSession) -> User:
+    token = request.cookies.get(ACCESS_COOKIE)
+    payload = decode_token(token, ACCESS) if token else None
+    if payload is None:
+        raise AuthenticationError("Missing or invalid access token")
+
+    user = await UserRepository(db).get_by_id(int(payload["sub"]))
+    if user is None or not user.is_active or user.token_version != payload["ver"]:
+        raise AuthenticationError("Session is no longer valid")
+    return user
+
+
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 def get_vehicle_service(request: Request) -> VehicleService:

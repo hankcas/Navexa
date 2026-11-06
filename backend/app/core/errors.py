@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.exceptions import AuthenticationError, PermissionDeniedError
 from app.integrations.wialon.exceptions import WialonError, WialonUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,26 @@ def problem(
 
 
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(AuthenticationError)
+    async def authentication_error(request: Request, exc: AuthenticationError):
+        logger.info("Authentication failed on %s: %s", request.url.path, exc)
+        return problem(
+            request,
+            401,
+            "No autenticado",
+            "Correo o contraseña incorrectos, o la sesión expiró. Si fallaste varias veces, espera 15 minutos.",
+        )
+
+    @app.exception_handler(PermissionDeniedError)
+    async def permission_denied(request: Request, exc: PermissionDeniedError):
+        logger.warning("Access denied on %s: %s", request.url.path, exc)
+        return problem(
+            request,
+            403,
+            "Acceso denegado",
+            "No tienes permiso para realizar esta acción.",
+        )
+
     @app.exception_handler(WialonUnavailableError)
     async def wialon_unavailable(request: Request, exc: WialonUnavailableError):
         logger.warning("Wialon unavailable: %s", exc)

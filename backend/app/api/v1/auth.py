@@ -1,0 +1,92 @@
+from fastapi import APIRouter, Request, Response, status
+
+from app.api.dependencies import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUserDep, DbSession
+from app.core.config import settings
+from app.core.exceptions import AuthenticationError
+from app.core.security import ACCESS, REFRESH, create_token, decode_token
+from app.db.models import User
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth import CurrentUser, LoginRequest
+from app.services.auth_service import AuthService
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+REFRESH_COOKIE_PATH = "/api/v1/auth"
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
+
+
+def _to_current_user(user: User) -> CurrentUser:
+    return CurrentUser(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role.name,
+        permissions=sorted(p.code for p in user.role.permissions),
+        must_change_password=user.must_change_password,
+    )
+
+
+def _set_session_cookies(response: Response, user: User) -> None:
+    common = {
+        "httponly": True,
+        "secure": settings.cookie_secure,
+        "samesite": settings.cookie_samesite,
+    }
+    response.set_cookie(
+        ACCESS_COOKIE,
+        create_token(user.id, user.token_version, ACCESS),
+        max_age=settings.access_token_minutes * 60,
+        path="/",
+        **common,
+    )
+    response.set_cookie(
+        REFRESH_COOKIE,
+        create_token(user.id, user.token_version, REFRESH),
+        max_age=settings.refresh_token_days * 24 * 3600,
+        path=REFRESH_COOKIE_PATH,
+        **common,
+    )
+
+
+def _clear_session_cookies(response: Response) -> None:
+    response.delete_cookie(ACCESS_COOKIE, path="/")
+    response.delete_cookie(REFRESH_COOKIE, path=REFRESH_COOKIE_PATH)
+
+
+@router.post("/login", response_model=CurrentUser)
+async def login(
+    body: LoginRequest, request: Request, response: Response, db: DbSession
+) -> CurrentUser:
+    user = await AuthService(db).authenticate(
+        body.email, body.password, _client_ip(request)
+    )
+    _set_session_cookies(response, user)
+    return _to_current_user(user)
+
+
+@router.post("/refresh", response_model=CurrentUser)
+async def refresh(request: Request, response: Response, db: DbSession) -> CurrentUser:
+    token = request.cookies.get(REFRESH_COOKIE)
+    payload = decode_token(token, REFRESH) if token else None
+    user = await UserRepository(db).get_by_id(int(payload["sub"])) if payload else None
+    if user is None or not user.is_active or user.token_version != payload["ver"]:
+        _clear_session_cookies(response)
+        raise AuthenticationError("Invalid refresh token")
+    _set_session_cookies(response, user)
+    return _to_current_user(user)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    user: CurrentUserDep, request: Request, response: Response, db: DbSession
+) -> None:
+    await AuthService(db).logout(user, _client_ip(request))
+    _clear_session_cookies(response)
+
+
+@router.get("/me", response_model=CurrentUser)
+async def me(user: CurrentUserDep) -> CurrentUser:
+    return _to_current_user(user)

@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     wialon_base_url: str
     wialon_token: str
+    database_url: str
 
     status_moving_speed_kmh: float = 5.0
     status_offline_minutes: int = 60

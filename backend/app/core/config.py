@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     first_admin_email: str | None = None
     first_admin_password: str | None = None
     first_admin_name: str = "Administrador"
+    
+    jwt_secret: str
+    access_token_minutes: int = 15
+    refresh_token_days: int = 7
+    cookie_secure: bool = True
+    cookie_samesite: str = "lax"
 
 
 settings = Settings()

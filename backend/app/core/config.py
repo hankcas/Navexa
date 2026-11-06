@@ -12,6 +12,10 @@ class Settings(BaseSettings):
 
     status_moving_speed_kmh: float = 5.0
     status_offline_minutes: int = 60
+    
+    first_admin_email: str | None = None
+    first_admin_password: str | None = None
+    first_admin_name: str = "Administrador"
 
 
 settings = Settings()

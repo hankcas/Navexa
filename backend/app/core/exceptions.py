@@ -5,10 +5,18 @@ class AuthenticationError(Exception):
 class PermissionDeniedError(Exception):
     """The user is authenticated but lacks the required permission."""
 
-    
+
 class BusinessRuleError(Exception):
     """A request is well formed but breaks a business rule."""
 
-    def __init__(self, message: str):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int = 422,
+        title: str = "Solicitud no válida",
+    ):
         super().__init__(message)
         self.message = message
+        self.status_code = status_code
+        self.title = title

@@ -1,3 +1,5 @@
+import secrets
+import string
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -46,3 +48,18 @@ def decode_token(token: str, expected_type: str) -> dict[str, Any] | None:
     if payload.get("type") != expected_type:
         return None
     return payload
+
+
+def generate_temporary_password(length: int = 16) -> str:
+    """Random password that always satisfies the password policy."""
+    groups = [
+        string.ascii_lowercase,
+        string.ascii_uppercase,
+        string.digits,
+        "!@#$%&*-_+=?",
+    ]
+    chars = [secrets.choice(group) for group in groups]
+    alphabet = "".join(groups)
+    chars += [secrets.choice(alphabet) for _ in range(length - len(chars))]
+    secrets.SystemRandom().shuffle(chars)
+    return "".join(chars)

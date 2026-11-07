@@ -51,11 +51,12 @@ def register_exception_handlers(app: FastAPI) -> None:
             "Acceso denegado",
             "No tienes permiso para realizar esta acción.",
         )
-        @app.exception_handler(BusinessRuleError)
-        async def business_rule_error(request: Request, exc: BusinessRuleError):
-         return problem(request, 422, "Solicitud no válida", exc.message)
 
-    @app.exception_handler(WialonUnavailableError)
+    @app.exception_handler(BusinessRuleError)
+    async def business_rule_error(request: Request, exc: BusinessRuleError):
+        return problem(request, 422, "Solicitud no válida", exc.message)
+
+    @app.exception_handler(WialonUnavailableError)  
     async def wialon_unavailable(request: Request, exc: WialonUnavailableError):
         logger.warning("Wialon unavailable: %s", exc)
         return problem(

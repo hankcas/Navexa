@@ -6,7 +6,7 @@ from app.core.exceptions import AuthenticationError
 from app.core.security import ACCESS, REFRESH, create_token, decode_token
 from app.db.models import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import CurrentUser, LoginRequest
+from app.schemas.auth import ChangePasswordRequest, CurrentUser, LoginRequest
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -75,6 +75,21 @@ async def refresh(request: Request, response: Response, db: DbSession) -> Curren
     if user is None or not user.is_active or user.token_version != payload["ver"]:
         _clear_session_cookies(response)
         raise AuthenticationError("Invalid refresh token")
+    _set_session_cookies(response, user)
+    return _to_current_user(user)
+
+
+@router.post("/change-password", response_model=CurrentUser)
+async def change_password(
+    body: ChangePasswordRequest,
+    user: CurrentUserDep,
+    request: Request,
+    response: Response,
+    db: DbSession,
+) -> CurrentUser:
+    await AuthService(db).change_password(
+        user, body.current_password, body.new_password, _client_ip(request)
+    )
     _set_session_cookies(response, user)
     return _to_current_user(user)
 

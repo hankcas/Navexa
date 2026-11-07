@@ -5,7 +5,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.exceptions import AuthenticationError, PermissionDeniedError
+from app.core.exceptions import (
+    AuthenticationError,
+    BusinessRuleError,
+    PermissionDeniedError,
+)
 from app.integrations.wialon.exceptions import WialonError, WialonUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -47,6 +51,9 @@ def register_exception_handlers(app: FastAPI) -> None:
             "Acceso denegado",
             "No tienes permiso para realizar esta acción.",
         )
+        @app.exception_handler(BusinessRuleError)
+        async def business_rule_error(request: Request, exc: BusinessRuleError):
+         return problem(request, 422, "Solicitud no válida", exc.message)
 
     @app.exception_handler(WialonUnavailableError)
     async def wialon_unavailable(request: Request, exc: WialonUnavailableError):

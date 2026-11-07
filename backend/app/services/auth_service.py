@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, BusinessRuleError
 from app.core.security import hash_password, verify_password
 from app.db.models import User
 from app.repositories.user_repository import UserRepository
@@ -52,6 +52,20 @@ class AuthService:
         self._audit.record("auth.login_success", actor=user, ip_address=ip)
         await self._session.commit()
         return user
+
+    async def change_password(
+        self, user: User, current_password: str, new_password: str, ip: str | None
+    ) -> None:
+        if not verify_password(current_password, user.password_hash):
+            raise BusinessRuleError("La contraseña actual no es correcta.")
+        if verify_password(new_password, user.password_hash):
+            raise BusinessRuleError("La nueva contraseña debe ser diferente a la actual.")
+
+        user.password_hash = hash_password(new_password)
+        user.must_change_password = False
+        user.token_version += 1
+        self._audit.record("auth.password_changed", actor=user, ip_address=ip)
+        await self._session.commit()
 
     async def logout(self, user: User, ip: str | None) -> None:
         user.token_version += 1

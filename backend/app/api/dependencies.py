@@ -6,10 +6,11 @@ from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, PermissionDeniedError
 from app.core.security import ACCESS, decode_token
 from app.db.models import User
 from app.db.session import SessionLocal
+from app.domain.permissions import PermissionCode
 from app.integrations.wialon.units_gateway import WialonUnitGateway
 from app.repositories.user_repository import UserRepository
 from app.services.vehicle_service import VehicleService
@@ -39,6 +40,17 @@ async def get_current_user(request: Request, db: DbSession) -> User:
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
+
+def require_permission(permission: PermissionCode):
+    async def checker(user: CurrentUserDep) -> User:
+        if user.must_change_password:
+            raise PermissionDeniedError(f"user={user.id} must change password first")
+        if permission.value not in {p.code for p in user.role.permissions}:
+            raise PermissionDeniedError(f"user={user.id} lacks {permission.value}")
+        return user
+
+    return checker
 
 
 def get_vehicle_service(request: Request) -> VehicleService:

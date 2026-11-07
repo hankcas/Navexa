@@ -1,0 +1,52 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.backLink {
+  align-self: center;
+  margin-top: var(--space-2);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.checklist {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rule::before {
+  content: '';
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 2px solid var(--gray-500);
+  border-radius: 50%;
+}
+
+.ruleMet {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.ruleMet::before {
+  border-color: var(--color-success);
+  background: var(--color-success);
+}

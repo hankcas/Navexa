@@ -1,0 +1,19 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-4);
+}
+
+.title {
+  font-size: 2.25rem;
+  line-height: 1.15;
+}
+
+.text {
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+}

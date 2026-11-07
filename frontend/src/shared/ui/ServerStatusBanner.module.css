@@ -1,0 +1,41 @@
+.region {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--white);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+.waking {
+  background: var(--teal-700);
+}
+
+.unavailable {
+  background: var(--red-700);
+}
+
+.retry {
+  min-height: 2.25rem;
+  padding: 0 var(--space-4);
+  border: 2px solid var(--white);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: rgb(255 255 255 / 15%);
+}

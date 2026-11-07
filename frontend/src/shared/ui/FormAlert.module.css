@@ -1,0 +1,16 @@
+.alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  background: var(--lilac-50);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+}
+
+.title {
+  color: var(--color-error);
+  font-weight: 700;
+}

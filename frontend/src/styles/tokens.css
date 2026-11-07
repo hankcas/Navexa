@@ -25,12 +25,15 @@
   --color-text: var(--ink);
   --color-text-muted: var(--gray-700);
   --color-text-on-dark: var(--lilac-100);
+  --color-text-on-dark-muted: var(--lilac-200);
   --color-primary: var(--red-700);
   --color-primary-hover: var(--red-800);
   --color-on-primary: var(--white);
   --color-accent: var(--teal-700);
   --color-accent-on-dark: var(--teal-300);
   --color-error: var(--red-700);
+  --color-success: var(--teal-700);
+  --color-input-border: var(--gray-500);
   --color-focus: var(--teal-500);
 
   /* Vehicle status, shared by the map, the tables and the landing illustration */

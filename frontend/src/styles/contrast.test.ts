@@ -36,6 +36,8 @@ describe('palette contrast (WCAG AA)', () => {
     ['teal-700', 'white'],
     ['teal-700', 'lilac-100'],
     ['lilac-100', 'red-950'],
+    ['lilac-200', 'red-950'],
+    ['white', 'teal-700'],
     ['teal-300', 'red-950'],
   ])('%s on %s reaches 4.5:1 for normal text', (text, background) => {
     expect(contrast(color(text), color(background))).toBeGreaterThanOrEqual(AA_TEXT)

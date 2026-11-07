@@ -1,0 +1,57 @@
+:root {
+  /* Mandatory palette */
+  --red-500: #eb162c;
+  --red-700: #a81a2b;
+  --gray-500: #6b6b6b;
+  --teal-500: #1e8c93;
+  --lilac-100: #eee8f2;
+
+  /* Tones derived from the palette, needed to reach WCAG AA */
+  --red-800: #8a1523;
+  --red-950: #26090e;
+  --gray-700: #4f4f4f;
+  --teal-700: #146a70;
+  --teal-300: #86d3d8;
+  --lilac-50: #f9f7fb;
+  --lilac-200: #dcd3e3;
+  --ink: #1f1722;
+  --white: #ffffff;
+
+  /* Roles: components use these, never the raw colors above */
+  --color-bg: var(--lilac-100);
+  --color-surface: var(--white);
+  --color-surface-dark: var(--red-950);
+  --color-border: var(--lilac-200);
+  --color-text: var(--ink);
+  --color-text-muted: var(--gray-700);
+  --color-text-on-dark: var(--lilac-100);
+  --color-primary: var(--red-700);
+  --color-primary-hover: var(--red-800);
+  --color-on-primary: var(--white);
+  --color-accent: var(--teal-700);
+  --color-accent-on-dark: var(--teal-300);
+  --color-error: var(--red-700);
+  --color-focus: var(--teal-500);
+
+  /* Vehicle status, shared by the map, the tables and the landing illustration */
+  --status-moving: var(--teal-500);
+  --status-stopped: var(--gray-500);
+  --status-offline: var(--red-500);
+
+  --font-sans: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+
+  --shadow-md: 0 8px 24px rgb(38 9 14 / 12%);
+}

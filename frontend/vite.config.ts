@@ -9,6 +9,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      // Small files are inlined as data: URIs by default, which the font-src 'self' CSP blocks.
+      assetsInlineLimit: (filePath: string) => (filePath.endsWith('.woff2') ? false : undefined),
+    },
     server: {
       // Mirrors the rewrites in vercel.json so local and production behave the same.
       proxy: {

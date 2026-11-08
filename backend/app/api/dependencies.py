@@ -63,14 +63,17 @@ def _unit_gateway(request: Request) -> WialonUnitGateway:
     )
 
 
+def _driver_gateway(request: Request) -> WialonDriverGateway:
+    return WialonDriverGateway(
+        request.app.state.wialon_client,
+        default_resource_id=settings.wialon_resource_id,
+    )
+
+
 def get_vehicle_service(request: Request) -> VehicleService:
-    return VehicleService(_unit_gateway(request))
+    return VehicleService(_unit_gateway(request), _driver_gateway(request))
 
 
 def get_driver_service(request: Request, db: DbSession) -> DriverService:
     """Dependency injection: the service receives its gateways, so tests can pass fakes."""
-    drivers = WialonDriverGateway(
-        request.app.state.wialon_client,
-        default_resource_id=settings.wialon_resource_id,
-    )
-    return DriverService(drivers, _unit_gateway(request), db)
+    return DriverService(_driver_gateway(request), _unit_gateway(request), db)

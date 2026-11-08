@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 from app.api.dependencies import get_driver_service, require_permission
 from app.db.models import User
 from app.domain.permissions import PermissionCode
-from app.schemas.driver import Driver, DriverCreate, DriverUpdate, VehicleAssignment
+from app.schemas.driver import Driver, DriverCreate, DriverUpdate
 from app.schemas.pagination import Page
+from app.schemas.vehicle import VehicleAssignment
 from app.services.driver_service import DriverService
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])

@@ -12,9 +12,11 @@ from app.db.models import User
 from app.db.session import SessionLocal
 from app.domain.permissions import PermissionCode
 from app.integrations.wialon.drivers_gateway import WialonDriverGateway
+from app.integrations.wialon.passengers_gateway import WialonPassengerGateway
 from app.integrations.wialon.units_gateway import WialonUnitGateway
 from app.repositories.user_repository import UserRepository
 from app.services.driver_service import DriverService
+from app.services.passenger_service import PassengerService
 from app.services.vehicle_service import VehicleService
 
 ACCESS_COOKIE = "access_token"
@@ -77,3 +79,10 @@ def get_vehicle_service(request: Request) -> VehicleService:
 def get_driver_service(request: Request, db: DbSession) -> DriverService:
     """Dependency injection: the service receives its gateways, so tests can pass fakes."""
     return DriverService(_driver_gateway(request), _unit_gateway(request), db)
+
+def get_passenger_service(request: Request, db: DbSession) -> PassengerService:
+    passengers = WialonPassengerGateway(
+        request.app.state.wialon_client,
+        default_resource_id=settings.wialon_resource_id,
+    )
+    return PassengerService(passengers, _unit_gateway(request), db)

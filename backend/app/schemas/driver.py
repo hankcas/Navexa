@@ -3,9 +3,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.custom_fields import clean_custom_fields
+
 # Wialon stores phones as "+1234567890": an optional "+" and 7 to 15 digits (E.164).
 _PHONE = re.compile(r"^\+?\d{7,15}$")
-MAX_CUSTOM_FIELDS = 20
 
 
 class Driver(BaseModel):
@@ -58,19 +59,7 @@ class _DriverInput(BaseModel):
     @field_validator("custom_fields")
     @classmethod
     def _check_custom_fields(cls, value: dict[str, str] | None) -> dict[str, str] | None:
-        if value is None:
-            return None
-        if len(value) > MAX_CUSTOM_FIELDS:
-            raise ValueError(f"Un conductor puede tener como máximo {MAX_CUSTOM_FIELDS} campos personalizados.")
-        cleaned: dict[str, str] = {}
-        for name, field_value in value.items():
-            name, field_value = name.strip(), field_value.strip()
-            if not 1 <= len(name) <= 50:
-                raise ValueError("El nombre de cada campo personalizado debe tener entre 1 y 50 caracteres.")
-            if len(field_value) > 200:
-                raise ValueError("El valor de cada campo personalizado puede tener como máximo 200 caracteres.")
-            cleaned[name] = field_value
-        return cleaned
+        return clean_custom_fields(value)
 
     def to_changes(self) -> DriverChanges:
         return DriverChanges(**self.model_dump(exclude_unset=True))
@@ -95,6 +84,3 @@ class DriverUpdate(_DriverInput):
     def _strip_name(cls, value: object) -> object:
         return value.strip() if isinstance(value, str) else value
 
-
-class VehicleAssignment(BaseModel):
-    vehicle_id: int = Field(gt=0)

@@ -3,6 +3,7 @@ from typing import Any
 
 from app.integrations.wialon.exceptions import WialonError
 from app.schemas.driver import Driver
+from app.schemas.passenger import Passenger
 
 
 class Script(list):
@@ -55,44 +56,76 @@ class FakeSession:
         self.commits += 1
 
 
-class FakeDriverGateway:
-    """In-memory drivers with the same methods as WialonDriverGateway."""
+class _InMemoryResourceItems:
+    """Drivers or passengers kept in memory, with the same behaviour as the Wialon gateways."""
 
-    def __init__(self, *drivers: Any):
-        self.drivers = {d.id: d for d in drivers}
+    model: Any
+
+    def __init__(self, *items: Any):
+        self.items = {item.id: item for item in items}
         self.events: list[tuple[str, str, int]] = []
         self._next_id = 100
 
-    async def list_drivers(self):
-        return list(self.drivers.values())
+    async def _list(self):
+        return list(self.items.values())
 
-    async def get_driver(self, ref):
-        return self.drivers.get(ref.public_id)
+    async def _get(self, ref):
+        return self.items.get(ref.public_id)
 
-    async def create_driver(self, changes):
+    async def _create(self, changes):
         self._next_id += 1
-        driver = Driver(id=f"1-{self._next_id}", **changes.model_dump(exclude_none=True))
-        self.drivers[driver.id] = driver
-        return driver
+        item = self.model(id=f"1-{self._next_id}", **changes.model_dump(exclude_none=True))
+        self.items[item.id] = item
+        return item
 
-    async def update_driver(self, ref, changes):
-        current = self.drivers.get(ref.public_id)
+    async def _update(self, ref, changes):
+        current = self.items.get(ref.public_id)
         if current is None:
             return None
         updated = current.model_copy(update=changes.model_dump(exclude_none=True))
-        self.drivers[updated.id] = updated
+        self.items[updated.id] = updated
         return updated
 
-    async def delete_driver(self, ref):
-        return self.drivers.pop(ref.public_id, None) is not None
+    async def _delete(self, ref):
+        return self.items.pop(ref.public_id, None) is not None
 
     async def bind_to_vehicle(self, ref, vehicle_id):
         self.events.append(("bind", ref.public_id, vehicle_id))
-        self.drivers[ref.public_id] = self.drivers[ref.public_id].model_copy(update={"vehicle_id": vehicle_id})
+        self.items[ref.public_id] = self.items[ref.public_id].model_copy(update={"vehicle_id": vehicle_id})
 
     async def unbind_from_vehicle(self, ref, vehicle_id):
         self.events.append(("unbind", ref.public_id, vehicle_id))
-        self.drivers[ref.public_id] = self.drivers[ref.public_id].model_copy(update={"vehicle_id": None})
+        self.items[ref.public_id] = self.items[ref.public_id].model_copy(update={"vehicle_id": None})
+
+
+class FakeDriverGateway(_InMemoryResourceItems):
+    """In-memory drivers with the same methods as WialonDriverGateway."""
+
+    model = Driver
+    list_drivers = _InMemoryResourceItems._list
+    get_driver = _InMemoryResourceItems._get
+    create_driver = _InMemoryResourceItems._create
+    update_driver = _InMemoryResourceItems._update
+    delete_driver = _InMemoryResourceItems._delete
+
+    @property
+    def drivers(self):
+        return self.items
+
+
+class FakePassengerGateway(_InMemoryResourceItems):
+    """In-memory passengers with the same methods as WialonPassengerGateway."""
+
+    model = Passenger
+    list_passengers = _InMemoryResourceItems._list
+    get_passenger = _InMemoryResourceItems._get
+    create_passenger = _InMemoryResourceItems._create
+    update_passenger = _InMemoryResourceItems._update
+    delete_passenger = _InMemoryResourceItems._delete
+
+    @property
+    def passengers(self):
+        return self.items
 
 
 class FakeVehicles:

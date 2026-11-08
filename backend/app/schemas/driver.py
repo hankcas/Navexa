@@ -1,6 +1,11 @@
+import re
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
+
+# Wialon stores phones as "+1234567890": an optional "+" and 7 to 15 digits (E.164).
+_PHONE = re.compile(r"^\+?\d{7,15}$")
+MAX_CUSTOM_FIELDS = 20
 
 
 class Driver(BaseModel):
@@ -27,3 +32,69 @@ class DriverChanges(BaseModel):
     phone: str | None = None
     description: str | None = None
     custom_fields: dict[str, str] | None = None
+
+
+class _DriverInput(BaseModel):
+    """Validation shared by create and update (RF-18). Texts are trimmed."""
+
+    code: str | None = Field(default=None, max_length=32)
+    phone: str | None = Field(default=None, max_length=16)
+    description: str | None = Field(default=None, max_length=200)
+    custom_fields: dict[str, str] | None = None
+
+    @field_validator("code", "phone", "description", mode="before")
+    @classmethod
+    def _strip(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator("phone")
+    @classmethod
+    def _check_phone(cls, value: str | None) -> str | None:
+        # An empty string is allowed: it clears the phone.
+        if value and not _PHONE.fullmatch(value):
+            raise ValueError("El teléfono debe tener entre 7 y 15 dígitos, con + opcional al inicio.")
+        return value
+
+    @field_validator("custom_fields")
+    @classmethod
+    def _check_custom_fields(cls, value: dict[str, str] | None) -> dict[str, str] | None:
+        if value is None:
+            return None
+        if len(value) > MAX_CUSTOM_FIELDS:
+            raise ValueError(f"Un conductor puede tener como máximo {MAX_CUSTOM_FIELDS} campos personalizados.")
+        cleaned: dict[str, str] = {}
+        for name, field_value in value.items():
+            name, field_value = name.strip(), field_value.strip()
+            if not 1 <= len(name) <= 50:
+                raise ValueError("El nombre de cada campo personalizado debe tener entre 1 y 50 caracteres.")
+            if len(field_value) > 200:
+                raise ValueError("El valor de cada campo personalizado puede tener como máximo 200 caracteres.")
+            cleaned[name] = field_value
+        return cleaned
+
+    def to_changes(self) -> DriverChanges:
+        return DriverChanges(**self.model_dump(exclude_unset=True))
+
+
+class DriverCreate(_DriverInput):
+    name: str = Field(min_length=2, max_length=80)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _strip_name(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+class DriverUpdate(_DriverInput):
+    """Only the fields present in the request change; the rest stay as they are in Wialon."""
+
+    name: str | None = Field(default=None, min_length=2, max_length=80)
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _strip_name(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+class VehicleAssignment(BaseModel):
+    vehicle_id: int = Field(gt=0)

@@ -1,0 +1,111 @@
+/*
+ * The table switches to cards based on the width of its own container, not the screen:
+ * it is narrow on a phone and also on a desktop when the map sits next to it.
+ */
+.container {
+  container-type: inline-size;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.name {
+  font-weight: 700;
+}
+
+/* The vehicle name is a button: it selects the vehicle and shows it on the map. */
+.select {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.select:disabled {
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: default;
+}
+
+.selected {
+  background: var(--lilac-100);
+  box-shadow: inset 4px 0 0 var(--color-primary);
+}
+
+.selected .select {
+  color: var(--color-primary);
+}
+
+.table abbr {
+  text-decoration: none;
+  cursor: help;
+}
+
+/* Narrow container: every row becomes a card with labelled cells, nothing overflows. */
+@container (max-width: 40rem) {
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table,
+  .table tbody {
+    display: block;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-4) 0;
+  }
+
+  .table th,
+  .table td {
+    padding: 0;
+  }
+
+  .name {
+    grid-column: 1 / -1;
+    font-size: 1.0625rem;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+}

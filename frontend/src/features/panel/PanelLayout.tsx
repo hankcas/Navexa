@@ -4,11 +4,13 @@ import { PATHS } from '../../app/paths'
 import { Button } from '../../shared/ui/Button'
 import { FormAlert } from '../../shared/ui/FormAlert'
 import { Logo } from '../../shared/ui/Logo'
+import { hasPermission } from '../auth/permissions'
 import { roleLabel } from '../auth/roles'
 import { useLogout, useSession } from '../auth/session'
+import { NAV_ITEMS } from './navigation'
 import styles from './PanelLayout.module.css'
 
-/** Frame of the private area. The menu will grow with each module, filtered by permissions. */
+/** Frame of the private area. The menu shows only the modules the user's permissions allow. */
 export function PanelLayout() {
   const { data: user } = useSession()
   const logout = useLogout()
@@ -25,9 +27,13 @@ export function PanelLayout() {
           <Logo />
         </Link>
         <nav aria-label="Principal" className={styles.nav}>
-          <NavLink to={PATHS.panel} end className={styles.navLink}>
-            Inicio
-          </NavLink>
+          {NAV_ITEMS.filter((item) => !item.permission || hasPermission(user, item.permission)).map(
+            (item) => (
+              <NavLink key={item.to} to={item.to} end={item.end} className={styles.navLink}>
+                {item.label}
+              </NavLink>
+            ),
+          )}
         </nav>
         <div className={styles.account}>
           <p className={styles.user}>

@@ -4,4 +4,5 @@ export const PATHS = {
   login: '/login',
   changePassword: '/cambiar-contrasena',
   panel: '/panel',
+  vehicles: '/panel/vehiculos',
 } as const

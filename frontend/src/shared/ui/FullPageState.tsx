@@ -1,25 +1,11 @@
-import type { ReactNode } from 'react'
-
 import styles from './FullPageState.module.css'
-import { Spinner } from './Spinner'
+import { StateMessage, type StateMessageProps } from './StateMessage'
 
-interface FullPageStateProps {
-  title: string
-  detail?: string
-  loading?: boolean
-  action?: ReactNode
-}
-
-/** Whole-screen loading, error or empty state, so no view is ever left blank. */
-export function FullPageState({ title, detail, loading = false, action }: FullPageStateProps) {
+/** A StateMessage that fills the screen, for pages that have no layout yet (ARQ-12). */
+export function FullPageState(props: Omit<StateMessageProps, 'headingLevel'>) {
   return (
     <main className={styles.page}>
-      <div className={styles.box} role={loading ? 'status' : undefined}>
-        {loading && <Spinner />}
-        <h1 className={styles.title}>{title}</h1>
-        {detail && <p className={styles.detail}>{detail}</p>}
-        {action}
-      </div>
+      <StateMessage headingLevel={1} {...props} />
     </main>
   )
 }

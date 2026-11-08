@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    optimizeDeps: {
+      // The map loads on demand, so Vite would find these libraries late and re-bundle them while
+      // the page is open, mixing old and new copies. Bundling them at startup avoids it (dev only).
+      include: ['leaflet', 'react-leaflet', 'react-leaflet-cluster'],
+    },
     build: {
       // Small files are inlined as data: URIs by default, which the font-src 'self' CSP blocks.
       assetsInlineLimit: (filePath: string) => (filePath.endsWith('.woff2') ? false : undefined),

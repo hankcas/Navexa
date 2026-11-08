@@ -5,7 +5,8 @@ import { Route, Routes } from 'react-router-dom'
 import { PATHS } from '../../app/paths'
 import { json, stubFetch } from '../../test/fetchStub'
 import { renderWithProviders } from '../../test/renderWithProviders'
-import { RedirectIfAuthenticated, RequireAuth } from './guards'
+import { RedirectIfAuthenticated, RequireAuth, RequirePermission } from './guards'
+import { PERMISSIONS } from './permissions'
 import { hasSessionHint, setSessionHint } from './sessionHint'
 import type { CurrentUser } from './types'
 
@@ -113,5 +114,33 @@ describe('RedirectIfAuthenticated', () => {
     renderRoutes({ pathname: PATHS.login, state: { from: '//sitio-malicioso.com' } })
 
     expect(await screen.findByText('Página del panel')).toBeInTheDocument()
+  })
+})
+
+describe('RequirePermission', () => {
+  function renderModule(permissions: string[]) {
+    setSessionHint()
+    stubFetch({ '/api/v1/auth/me': [json(200, { ...admin, role: 'viewer', permissions })] })
+    return renderWithProviders(
+      <Routes>
+        <Route element={<RequireAuth />}>
+          <Route element={<RequirePermission permission={PERMISSIONS.usersManage} />}>
+            <Route path="/panel/usuarios" element={<p>Página de usuarios</p>} />
+          </Route>
+        </Route>
+      </Routes>,
+      '/panel/usuarios',
+    )
+  }
+
+  it('shows the module when the role has the permission', async () => {
+    renderModule(['users:manage'])
+    expect(await screen.findByText('Página de usuarios')).toBeInTheDocument()
+  })
+
+  it('shows "no access" when the role lacks the permission', async () => {
+    renderModule(['vehicles:read'])
+    expect(await screen.findByText('No tienes acceso a esta sección')).toBeInTheDocument()
+    expect(screen.queryByText('Página de usuarios')).not.toBeInTheDocument()
   })
 })

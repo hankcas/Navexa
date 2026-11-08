@@ -2,8 +2,10 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import { PATHS } from '../../app/paths'
 import { ApiError } from '../../shared/api/errors'
-import { Button } from '../../shared/ui/Button'
+import { Button, ButtonLink } from '../../shared/ui/Button'
 import { FullPageState } from '../../shared/ui/FullPageState'
+import { StateMessage } from '../../shared/ui/StateMessage'
+import { hasPermission, type Permission } from './permissions'
 import { useSession } from './session'
 
 interface LoginRedirectState {
@@ -57,6 +59,27 @@ export function RedirectIfAuthenticated() {
     const from = safeRedirect((location.state as LoginRedirectState | null)?.from)
     const target = session.data.must_change_password ? PATHS.changePassword : (from ?? PATHS.panel)
     return <Navigate to={target} replace />
+  }
+
+  return <Outlet />
+}
+
+/**
+ * Shows "no access" instead of a module the user's role cannot use. Goes inside the panel layout,
+ * so the user keeps the menu. The backend answers 403 to the same user anyway.
+ */
+export function RequirePermission({ permission }: { permission: Permission }) {
+  const { data: user } = useSession()
+
+  if (!hasPermission(user, permission)) {
+    return (
+      <StateMessage
+        headingLevel={1}
+        title="No tienes acceso a esta sección"
+        detail="Tu rol no incluye este módulo. Si lo necesitas, pídele acceso al administrador."
+        action={<ButtonLink to={PATHS.panel}>Volver al panel</ButtonLink>}
+      />
+    )
   }
 
   return <Outlet />

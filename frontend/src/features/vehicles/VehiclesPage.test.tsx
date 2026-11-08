@@ -1,0 +1,195 @@
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Route, Routes } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { PATHS } from '../../app/paths'
+import { json, stubFetch } from '../../test/fetchStub'
+import { renderWithProviders } from '../../test/renderWithProviders'
+import type { VehiclesMapProps } from './map/VehiclesMap'
+import type { Vehicle } from './types'
+import { VehiclesPage } from './VehiclesPage'
+
+// jsdom cannot draw a Leaflet map. This stand-in shows each marker as a button and the current
+// selection as text, so the list ↔ map synchronization can be tested.
+vi.mock('./map/VehiclesMap', () => ({
+  VehiclesMap: ({ vehicles, selectedId, selectionSource, onSelect }: VehiclesMapProps) => (
+    <div>
+      {vehicles.map((vehicle) => (
+        <button key={vehicle.id} type="button" onClick={() => onSelect(vehicle.id)}>
+          Marcador {vehicle.name}
+        </button>
+      ))}
+      <p>
+        Seleccionado en el mapa: {selectedId ?? 'ninguno'} desde {selectionSource ?? 'ninguna parte'}
+      </p>
+    </div>
+  ),
+}))
+
+const truck: Vehicle = {
+  id: 1,
+  name: 'Camión 01',
+  status: 'moving',
+  speed_kmh: 42.4,
+  last_update: '2026-11-07T15:30:00Z',
+  position: { latitude: 4.65, longitude: -74.05, altitude_m: 2600, heading: 90, satellites: 9 },
+}
+
+const van: Vehicle = {
+  id: 2,
+  name: 'Van 07',
+  status: 'no_position',
+  speed_kmh: null,
+  last_update: null,
+  position: null,
+}
+
+function page(items: Vehicle[], overrides: Partial<{ page: number; pages: number; total: number }> = {}) {
+  return json(200, { items, total: items.length, page: 1, page_size: 20, pages: 1, ...overrides })
+}
+
+const LIST = '/api/v1/vehicles?page=1&page_size=20'
+const MAP = '/api/v1/vehicles?page=1&page_size=100'
+
+function renderPage(initialEntry: string = PATHS.vehicles) {
+  return renderWithProviders(
+    <Routes>
+      <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+    </Routes>,
+    initialEntry,
+  )
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('VehiclesPage list', () => {
+  it('lists vehicles with their transformed data', async () => {
+    stubFetch({ [LIST]: [page([truck, van])], [MAP]: [page([truck, van])] })
+    renderPage()
+
+    const row = (await screen.findByRole('rowheader', { name: 'Camión 01' })).closest('tr')!
+    expect(within(row).getByText('En movimiento')).toBeInTheDocument()
+    expect(within(row).getByText('42 km/h')).toBeInTheDocument()
+    expect(within(row).getByTitle('Este')).toHaveTextContent('E')
+
+    const emptyRow = screen.getByRole('rowheader', { name: 'Van 07' }).closest('tr')!
+    expect(within(emptyRow).getByText('Sin posición')).toBeInTheDocument()
+    expect(within(emptyRow).getAllByText('Sin dato')).toHaveLength(3)
+    expect(screen.getByText('2 vehículos')).toBeInTheDocument()
+  })
+
+  it('asks the server for one status when a filter is chosen', async () => {
+    const http = stubFetch({
+      [LIST]: [page([truck, van])],
+      [MAP]: [page([truck, van])],
+      [`${LIST}&status=moving`]: [page([truck])],
+      [`${MAP}&status=moving`]: [page([truck])],
+    })
+    renderPage()
+    await screen.findByText('Van 07')
+
+    await userEvent.click(screen.getByRole('button', { name: 'En movimiento' }))
+
+    expect(await screen.findByText('1 vehículo')).toBeInTheDocument()
+    expect(screen.queryByText('Van 07')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'En movimiento' })).toHaveAttribute('aria-pressed', 'true')
+    expect(http.callsTo(`${LIST}&status=moving`)).toBe(1)
+    expect(http.callsTo(`${MAP}&status=moving`)).toBe(1)
+  })
+
+  it('searches on the server once the user stops typing', async () => {
+    const http = stubFetch({
+      [LIST]: [page([truck, van])],
+      [MAP]: [page([truck, van])],
+      [`${LIST}&search=van+07`]: [page([van])],
+      [`${MAP}&search=van+07`]: [page([van])],
+    })
+    renderPage()
+    await screen.findByText('Camión 01')
+
+    await userEvent.type(screen.getByLabelText('Buscar por nombre'), 'van 07')
+
+    expect(await screen.findByText('1 vehículo')).toBeInTheDocument()
+    expect(http.callsTo(`${LIST}&search=van+07`)).toBe(1)
+  })
+
+  it('guides the user when no vehicle matches the filters', async () => {
+    stubFetch({ [`${LIST}&search=zzz`]: [page([])], [`${MAP}&search=zzz`]: [page([])] })
+    renderPage(`${PATHS.vehicles}?buscar=zzz`)
+
+    expect(await screen.findByText('Ningún vehículo coincide con tu búsqueda')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Limpiar filtros' })).toBeInTheDocument()
+  })
+
+  it('moves between pages', async () => {
+    stubFetch({
+      [LIST]: [page([truck], { pages: 2, total: 21 })],
+      ['/api/v1/vehicles?page=2&page_size=20']: [page([van], { page: 2, pages: 2, total: 21 })],
+      [MAP]: [page([truck, van])],
+    })
+    renderPage()
+    await screen.findByText('Camión 01')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+
+    expect(await screen.findByText('Van 07')).toBeInTheDocument()
+    expect(screen.getByText('Página 2 de 2')).toBeInTheDocument()
+  })
+
+  it('offers a retry when the vehicles cannot be loaded', async () => {
+    const unavailable = json(503, {
+      title: 'Servicio externo no disponible',
+      detail: 'No pudimos comunicarnos con la plataforma de rastreo.',
+    })
+    stubFetch({ [LIST]: [unavailable], [MAP]: [unavailable] })
+    renderPage()
+
+    expect(await screen.findByText('No pudimos cargar los vehículos')).toBeInTheDocument()
+    expect(screen.getByText('No pudimos cargar el mapa')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Reintentar' })).toHaveLength(2)
+  })
+})
+
+describe('VehiclesPage map', () => {
+  it('draws only vehicles with a position and says how many are missing', async () => {
+    stubFetch({ [LIST]: [page([truck, van])], [MAP]: [page([truck, van])] })
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Marcador Camión 01' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Marcador Van 07' })).not.toBeInTheDocument()
+    expect(screen.getByText('1 vehículo no aparece en el mapa porque no tiene posición.')).toBeInTheDocument()
+  })
+
+  it('shows on the map the vehicle chosen in the list', async () => {
+    stubFetch({ [LIST]: [page([truck, van])], [MAP]: [page([truck, van])] })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Camión 01' }))
+
+    expect(await screen.findByText('Seleccionado en el mapa: 1 desde list')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Camión 01' })).toHaveAttribute('aria-pressed', 'true')
+    // On phones, choosing a vehicle switches to the map view.
+    expect(screen.getByRole('button', { name: 'Mapa' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('highlights in the list the vehicle clicked on the map', async () => {
+    stubFetch({ [LIST]: [page([truck, van])], [MAP]: [page([truck, van])] })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Marcador Camión 01' }))
+
+    expect(screen.getByRole('button', { name: 'Camión 01' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Seleccionado en el mapa: 1 desde map')).toBeInTheDocument()
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('does not let the user pick a vehicle without position', async () => {
+    stubFetch({ [LIST]: [page([truck, van])], [MAP]: [page([truck, van])] })
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Van 07' })).toBeDisabled()
+  })
+})

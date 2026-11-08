@@ -1,3 +1,11 @@
+/*
+ * The table switches to cards based on the width of its own container, not the screen:
+ * it is narrow on a phone and also on a desktop when the map sits next to it.
+ */
+.container {
+  container-type: inline-size;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -60,14 +68,19 @@
   cursor: help;
 }
 
-/* Phones: every row becomes a card with labelled cells. */
-@media (max-width: 767px) {
+/* Narrow container: every row becomes a card with labelled cells, nothing overflows. */
+@container (max-width: 40rem) {
   .table thead {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
+  }
+
+  .table,
+  .table tbody {
+    display: block;
   }
 
   .table tbody tr {

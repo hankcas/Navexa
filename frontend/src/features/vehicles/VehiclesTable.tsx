@@ -25,57 +25,62 @@ export function VehiclesTable({ vehicles, selectedId, scrollToSelected, onSelect
   }, [selectedId, scrollToSelected])
 
   return (
-    <table className={styles.table}>
-      <caption className="visually-hidden">
-        Vehículos de la flota. Elige un vehículo para ubicarlo en el mapa.
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">Vehículo</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Velocidad</th>
-          <th scope="col">Rumbo</th>
-          <th scope="col">Última actualización</th>
-        </tr>
-      </thead>
-      <tbody>
-        {vehicles.map((vehicle) => {
-          const cardinal = headingToCardinal(vehicle.position?.heading ?? null)
-          const selected = vehicle.id === selectedId
-          return (
-            <tr
-              key={vehicle.id}
-              ref={selected ? selectedRow : undefined}
-              className={selected ? styles.selected : undefined}
-            >
-              <th scope="row" className={styles.name}>
-                <button
-                  type="button"
-                  className={styles.select}
-                  aria-pressed={selected}
-                  disabled={vehicle.position === null}
-                  title={vehicle.position === null ? 'Sin posición para mostrar en el mapa' : undefined}
-                  onClick={() => onSelect(vehicle.id)}
-                >
-                  {vehicle.name}
-                </button>
-              </th>
-              <td data-label="Estado">
-                <StatusBadge status={vehicle.status} />
-              </td>
-              <td data-label="Velocidad">{formatSpeed(vehicle.speed_kmh)}</td>
-              <td data-label="Rumbo">
-                {cardinal ? <abbr title={cardinal.long}>{cardinal.short}</abbr> : 'Sin dato'}
-              </td>
-              <td data-label="Última actualización">
-                <time dateTime={vehicle.last_update ?? undefined} title={formatDateTime(vehicle.last_update)}>
-                  {formatRelative(vehicle.last_update)}
-                </time>
-              </td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+    <div className={styles.container}>
+      <table className={styles.table}>
+        <caption className="visually-hidden">
+          Vehículos de la flota. Elige un vehículo para ubicarlo en el mapa.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Vehículo</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Velocidad</th>
+            <th scope="col">Rumbo</th>
+            <th scope="col">Actualizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vehicles.map((vehicle) => {
+            const cardinal = headingToCardinal(vehicle.position?.heading ?? null)
+            const selected = vehicle.id === selectedId
+            return (
+              <tr
+                key={vehicle.id}
+                ref={selected ? selectedRow : undefined}
+                className={selected ? styles.selected : undefined}
+              >
+                <th scope="row" className={styles.name}>
+                  <button
+                    type="button"
+                    className={styles.select}
+                    aria-pressed={selected}
+                    disabled={vehicle.position === null}
+                    title={vehicle.position === null ? 'Sin posición para mostrar en el mapa' : undefined}
+                    onClick={() => onSelect(vehicle.id)}
+                  >
+                    {vehicle.name}
+                  </button>
+                </th>
+                <td data-label="Estado">
+                  <StatusBadge status={vehicle.status} />
+                </td>
+                <td data-label="Velocidad">{formatSpeed(vehicle.speed_kmh)}</td>
+                <td data-label="Rumbo">
+                  {cardinal ? <abbr title={cardinal.long}>{cardinal.short}</abbr> : 'Sin dato'}
+                </td>
+                <td data-label="Actualizado">
+                  <time
+                    dateTime={vehicle.last_update ?? undefined}
+                    title={formatDateTime(vehicle.last_update)}
+                  >
+                    {formatRelative(vehicle.last_update)}
+                  </time>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
 }

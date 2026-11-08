@@ -33,6 +33,12 @@ const PanelHome = lazy(() =>
 const VehiclesPage = lazy(() =>
   import('./features/vehicles/VehiclesPage').then((module) => ({ default: module.VehiclesPage })),
 )
+const DriversPage = lazy(() =>
+  import('./features/drivers/DriversPage').then((module) => ({ default: module.DriversPage })),
+)
+const PassengersPage = lazy(() =>
+  import('./features/passengers/PassengersPage').then((module) => ({ default: module.PassengersPage })),
+)
 
 /** Shown instead of a blank screen when a page fails to render (ARQ-12). */
 const pageError = (
@@ -62,6 +68,12 @@ export function App() {
                     <Route index element={<PanelHome />} />
                     <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
                       <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+                    </Route>
+                    <Route element={<RequirePermission permission={PERMISSIONS.driversRead} />}>
+                      <Route path={PATHS.drivers} element={<DriversPage />} />
+                    </Route>
+                    <Route element={<RequirePermission permission={PERMISSIONS.passengersRead} />}>
+                      <Route path={PATHS.passengers} element={<PassengersPage />} />
                     </Route>
                   </Route>
                 </Route>

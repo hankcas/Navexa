@@ -14,4 +14,6 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { to: PATHS.panel, label: 'Inicio', end: true },
   { to: PATHS.vehicles, label: 'Vehículos', permission: PERMISSIONS.vehiclesRead },
+  { to: PATHS.drivers, label: 'Conductores', permission: PERMISSIONS.driversRead },
+  { to: PATHS.passengers, label: 'Pasajeros', permission: PERMISSIONS.passengersRead },
 ]

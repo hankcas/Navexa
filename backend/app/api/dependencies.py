@@ -15,6 +15,7 @@ from app.integrations.wialon.drivers_gateway import WialonDriverGateway
 from app.integrations.wialon.passengers_gateway import WialonPassengerGateway
 from app.integrations.wialon.units_gateway import WialonUnitGateway
 from app.repositories.user_repository import UserRepository
+from app.services.dashboard_service import DashboardService
 from app.services.driver_service import DriverService
 from app.services.passenger_service import PassengerService
 from app.services.vehicle_service import VehicleService
@@ -72,6 +73,13 @@ def _driver_gateway(request: Request) -> WialonDriverGateway:
     )
 
 
+def _passenger_gateway(request: Request) -> WialonPassengerGateway:
+    return WialonPassengerGateway(
+        request.app.state.wialon_client,
+        default_resource_id=settings.wialon_resource_id,
+    )
+
+
 def get_vehicle_service(request: Request) -> VehicleService:
     return VehicleService(_unit_gateway(request), _driver_gateway(request))
 
@@ -80,9 +88,12 @@ def get_driver_service(request: Request, db: DbSession) -> DriverService:
     """Dependency injection: the service receives its gateways, so tests can pass fakes."""
     return DriverService(_driver_gateway(request), _unit_gateway(request), db)
 
+
 def get_passenger_service(request: Request, db: DbSession) -> PassengerService:
-    passengers = WialonPassengerGateway(
-        request.app.state.wialon_client,
-        default_resource_id=settings.wialon_resource_id,
+    return PassengerService(_passenger_gateway(request), _unit_gateway(request), db)
+
+
+def get_dashboard_service(request: Request) -> DashboardService:
+    return DashboardService(
+        _unit_gateway(request), _driver_gateway(request), _passenger_gateway(request)
     )
-    return PassengerService(passengers, _unit_gateway(request), db)

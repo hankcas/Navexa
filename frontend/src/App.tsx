@@ -13,6 +13,7 @@ import { ErrorBoundary } from './shared/ui/ErrorBoundary'
 import { FullPageState } from './shared/ui/FullPageState'
 import { reloadPage } from './shared/ui/reloadPage'
 import { ServerStatusBanner } from './shared/ui/ServerStatusBanner'
+import { ToastProvider } from './shared/ui/toast/ToastProvider'
 
 // Private pages load on demand, so the public landing downloads as little JavaScript as possible.
 const LoginPage = lazy(() =>
@@ -46,27 +47,29 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ServerStatusBanner />
-        <ErrorBoundary fallback={pageError}>
-          <Suspense fallback={<FullPageState loading title="Cargando…" />}>
-            <Routes>
-              <Route path={PATHS.home} element={<LandingPage />} />
-              <Route element={<RedirectIfAuthenticated />}>
-                <Route path={PATHS.login} element={<LoginPage />} />
-              </Route>
-              <Route element={<RequireAuth />}>
-                <Route path={PATHS.changePassword} element={<ChangePasswordPage />} />
-                <Route path={PATHS.panel} element={<PanelLayout />}>
-                  <Route index element={<PanelHome />} />
-                  <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
-                    <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+        <ToastProvider>
+          <ServerStatusBanner />
+          <ErrorBoundary fallback={pageError}>
+            <Suspense fallback={<FullPageState loading title="Cargando…" />}>
+              <Routes>
+                <Route path={PATHS.home} element={<LandingPage />} />
+                <Route element={<RedirectIfAuthenticated />}>
+                  <Route path={PATHS.login} element={<LoginPage />} />
+                </Route>
+                <Route element={<RequireAuth />}>
+                  <Route path={PATHS.changePassword} element={<ChangePasswordPage />} />
+                  <Route path={PATHS.panel} element={<PanelLayout />}>
+                    <Route index element={<PanelHome />} />
+                    <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
+                      <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+                    </Route>
                   </Route>
                 </Route>
-              </Route>
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

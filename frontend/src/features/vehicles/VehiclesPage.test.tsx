@@ -34,6 +34,7 @@ const truck: Vehicle = {
   speed_kmh: 42.4,
   last_update: '2026-11-07T15:30:00Z',
   position: { latitude: 4.65, longitude: -74.05, altitude_m: 2600, heading: 90, satellites: 9 },
+  driver: { id: '1-1', name: 'Ana Gómez', phone: null },
 }
 
 const van: Vehicle = {
@@ -43,6 +44,7 @@ const van: Vehicle = {
   speed_kmh: null,
   last_update: null,
   position: null,
+  driver: null,
 }
 
 function page(items: Vehicle[], overrides: Partial<{ page: number; pages: number; total: number }> = {}) {

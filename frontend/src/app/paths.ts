@@ -5,4 +5,6 @@ export const PATHS = {
   changePassword: '/cambiar-contrasena',
   panel: '/panel',
   vehicles: '/panel/vehiculos',
+  drivers: '/panel/conductores',
+  passengers: '/panel/pasajeros',
 } as const

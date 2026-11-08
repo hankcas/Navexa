@@ -12,6 +12,7 @@ const moving: LocatedVehicle = {
   speed_kmh: 50,
   last_update: '2026-11-07T15:30:00Z',
   position: { latitude: 4.65, longitude: -74.05, altitude_m: null, heading: 135, satellites: null },
+  driver: null,
 }
 
 function markerElement(icon: L.DivIcon): HTMLElement {

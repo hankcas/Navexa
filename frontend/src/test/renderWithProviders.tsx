@@ -3,7 +3,9 @@ import { render } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter, type InitialEntry } from 'react-router-dom'
 
-/** Renders with a fresh React Query cache and an in-memory router starting at the given entry. */
+import { ToastProvider } from '../shared/ui/toast/ToastProvider'
+
+/** Renders like the app does: fresh React Query cache, toasts and an in-memory router. */
 export function renderWithProviders(ui: ReactNode, initialEntry: InitialEntry = '/') {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -12,7 +14,9 @@ export function renderWithProviders(ui: ReactNode, initialEntry: InitialEntry = 
     queryClient,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[initialEntry]}>{ui}</MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <ToastProvider>{ui}</ToastProvider>
+        </MemoryRouter>
       </QueryClientProvider>,
     ),
   }

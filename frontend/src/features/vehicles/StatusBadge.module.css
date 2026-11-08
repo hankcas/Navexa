@@ -1,0 +1,36 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.125rem var(--space-3);
+  border-radius: 999px;
+  background: var(--lilac-50);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+}
+
+.moving .dot {
+  background: var(--status-moving);
+}
+
+.stopped .dot {
+  background: var(--status-stopped);
+}
+
+.offline .dot {
+  background: var(--status-offline);
+}
+
+/* Hollow dot: there is no position to show at all. */
+.no_position .dot {
+  border: 2px solid var(--status-stopped);
+  background: transparent;
+}

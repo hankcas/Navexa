@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.domain.driver_ref import DriverRef
+from app.domain.resource_item_ref import ResourceItemRef
 from app.integrations.wialon.driver_mappers import build_driver_params, map_driver
 from app.schemas.driver import DriverChanges
 
@@ -59,7 +59,7 @@ class TestMapDriver:
 
 
 class TestBuildDriverParams:
-    ref = DriverRef(RESOURCE_ID, 7)
+    ref = ResourceItemRef(RESOURCE_ID, 7)
 
     def test_update_keeps_every_field_the_user_did_not_change(self):
         params = build_driver_params(self.ref, WIALON_DRIVER, DriverChanges(phone="+573009999999"))
@@ -86,7 +86,7 @@ class TestBuildDriverParams:
         assert params["ds"] == ""
 
     def test_create_fills_every_field_with_safe_defaults(self):
-        params = build_driver_params(DriverRef(RESOURCE_ID, 0), None, DriverChanges(name="Luis"))
+        params = build_driver_params(ResourceItemRef(RESOURCE_ID, 0), None, DriverChanges(name="Luis"))
 
         assert params == {
             "itemId": RESOURCE_ID,

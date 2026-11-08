@@ -1,7 +1,7 @@
 from typing import Any
 
 from app.core.exceptions import BusinessRuleError
-from app.domain.driver_ref import DriverRef
+from app.domain.resource_item_ref import ResourceItemRef
 from app.integrations.wialon.client import WialonClient
 from app.integrations.wialon.driver_mappers import build_driver_params, map_driver
 from app.integrations.wialon.exceptions import WialonError
@@ -35,17 +35,17 @@ class WialonDriverGateway:
                 drivers.append(map_driver(resource["id"], raw))
         return drivers
 
-    async def get_driver(self, ref: DriverRef) -> Driver | None:
+    async def get_driver(self, ref: ResourceItemRef) -> Driver | None:
         raw = await self._raw_driver(ref)
         return map_driver(ref.resource_id, raw) if raw else None
 
     async def create_driver(self, changes: DriverChanges) -> Driver:
         resource_id = await self._resource_for_new_drivers()
-        params = build_driver_params(DriverRef(resource_id, 0), None, changes)
+        params = build_driver_params(ResourceItemRef(resource_id, 0), None, changes)
         created = await self._write_driver(params)
         return map_driver(resource_id, created[1])
 
-    async def update_driver(self, ref: DriverRef, changes: DriverChanges) -> Driver | None:
+    async def update_driver(self, ref: ResourceItemRef, changes: DriverChanges) -> Driver | None:
         # Read first: update_driver replaces the whole driver, so we send it back complete.
         current = await self._raw_driver(ref)
         if current is None:
@@ -67,28 +67,28 @@ class WialonDriverGateway:
                 ) from exc
             raise
 
-    async def delete_driver(self, ref: DriverRef) -> bool:
+    async def delete_driver(self, ref: ResourceItemRef) -> bool:
         if await self._raw_driver(ref) is None:
             return False
         await self._client.call(
             "resource/update_driver",
-            {"itemId": ref.resource_id, "id": ref.driver_id, "callMode": "delete"},
+            {"itemId": ref.resource_id, "id": ref.item_id, "callMode": "delete"},
         )
         return True
 
-    async def bind_to_vehicle(self, ref: DriverRef, vehicle_id: int) -> None:
+    async def bind_to_vehicle(self, ref: ResourceItemRef, vehicle_id: int) -> None:
         await self._bind(ref, vehicle_id, bind=True)
 
-    async def unbind_from_vehicle(self, ref: DriverRef, vehicle_id: int) -> None:
+    async def unbind_from_vehicle(self, ref: ResourceItemRef, vehicle_id: int) -> None:
         await self._bind(ref, vehicle_id, bind=False)
 
-    async def _bind(self, ref: DriverRef, vehicle_id: int, *, bind: bool) -> None:
+    async def _bind(self, ref: ResourceItemRef, vehicle_id: int, *, bind: bool) -> None:
         await self._client.call(
             "resource/bind_unit_driver",
             {
                 "resourceId": ref.resource_id,
                 "unitId": vehicle_id,
-                "driverId": ref.driver_id,
+                "driverId": ref.item_id,
                 "time": 0,  # 0 = now
                 "mode": 1 if bind else 0,
             },
@@ -112,7 +112,7 @@ class WialonDriverGateway:
         )
         return result.get("items", [])
 
-    async def _raw_driver(self, ref: DriverRef) -> dict[str, Any] | None:
+    async def _raw_driver(self, ref: ResourceItemRef) -> dict[str, Any] | None:
         """The driver exactly as Wialon stores it, or None if it does not exist."""
         try:
             result = await self._client.call(
@@ -123,7 +123,7 @@ class WialonDriverGateway:
                 return None
             raise
         drivers = (result.get("item") or {}).get("drvrs") or {}
-        return next((d for d in drivers.values() if d.get("id") == ref.driver_id), None)
+        return next((d for d in drivers.values() if d.get("id") == ref.item_id), None)
 
     async def _resource_for_new_drivers(self) -> int:
         if self._default_resource_id is not None:

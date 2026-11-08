@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from app.domain.driver_ref import DriverRef
+from app.domain.resource_item_ref import ResourceItemRef
 from app.schemas.driver import Driver, DriverChanges
 
 # Fields our API never shows, but resource/update_driver needs back unchanged:
@@ -33,7 +33,7 @@ def map_driver(resource_id: int, raw: dict[str, Any]) -> Driver:
     bound_unit = raw.get("bu")
     vehicle_id = bound_unit if isinstance(bound_unit, int) and bound_unit > 0 else None
     return Driver(
-        id=DriverRef(resource_id, raw["id"]).public_id,
+        id=ResourceItemRef(resource_id, raw["id"]).public_id,
         name=_text_or_none(raw.get("n")) or f"Conductor {raw['id']}",
         code=_text_or_none(raw.get("c")),
         phone=_text_or_none(raw.get("p")),
@@ -45,7 +45,7 @@ def map_driver(resource_id: int, raw: dict[str, Any]) -> Driver:
 
 
 def build_driver_params(
-    ref: DriverRef,
+    ref: ResourceItemRef,
     current: dict[str, Any] | None,
     changes: DriverChanges,
 ) -> dict[str, Any]:
@@ -62,7 +62,7 @@ def build_driver_params(
 
     params: dict[str, Any] = {
         "itemId": ref.resource_id,
-        "id": ref.driver_id,
+        "id": ref.item_id,
         "callMode": "update" if current else "create",
         "n": pick(changes.name, "n", ""),
         "c": pick(changes.code, "c", ""),

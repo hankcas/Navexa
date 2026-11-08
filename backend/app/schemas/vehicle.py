@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.domain.vehicle_status import VehicleStatus
 
@@ -30,3 +30,9 @@ class Vehicle(BaseModel):
     position: Position | None = None
     # None means no driver is bound to the vehicle in Wialon.
     driver: VehicleDriver | None = None
+
+
+class VehicleAssignment(BaseModel):
+    """Body to assign a driver or a passenger to a vehicle."""
+
+    vehicle_id: int = Field(gt=0)

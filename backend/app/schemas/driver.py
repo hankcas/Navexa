@@ -84,6 +84,3 @@ class DriverUpdate(_DriverInput):
     def _strip_name(cls, value: object) -> object:
         return value.strip() if isinstance(value, str) else value
 
-
-class VehicleAssignment(BaseModel):
-    vehicle_id: int = Field(gt=0)

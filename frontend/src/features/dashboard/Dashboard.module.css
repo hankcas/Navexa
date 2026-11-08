@@ -1,0 +1,175 @@
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  height: 100%;
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6);
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.kpiLink:hover {
+  box-shadow: 0 12px 28px rgb(38 9 14 / 18%);
+}
+
+.kpiMark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+}
+
+.kpiLabel {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.kpiValue {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kpiDetail {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.charts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.chartTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.chartDescription {
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.donutLayout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+.donut {
+  width: 11rem;
+  height: 11rem;
+}
+
+.track {
+  fill: none;
+  stroke: var(--lilac-100);
+  stroke-width: 22;
+}
+
+.arc {
+  fill: none;
+  stroke-width: 22;
+}
+
+.donutValue {
+  fill: var(--color-text);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.donutLabel {
+  fill: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bar {
+  display: flex;
+  height: 1.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--lilac-100);
+}
+
+.barSegment {
+  height: 100%;
+}
+
+.legend {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 12rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 3px;
+}
+
+.legendLabel {
+  font-weight: 600;
+}
+
+.legendValue {
+  font-weight: 800;
+  text-align: right;
+}
+
+.legendPercent {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.updated {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+@media (min-width: 1024px) {
+  .charts {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}

@@ -40,6 +40,7 @@
   --status-moving: var(--teal-500);
   --status-stopped: var(--gray-500);
   --status-offline: var(--red-500);
+  --status-no-position: var(--red-950);
 
   --font-sans: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 

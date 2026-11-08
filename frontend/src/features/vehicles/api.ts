@@ -17,9 +17,12 @@ export const vehiclesApi = {
   /** One page for the list. Search, filter and pagination happen on the server (RF-10). */
   list: (filters: VehicleFilters) => apiRequest<Page<Vehicle>>(vehiclesPath(filters)),
 
-  /** Every vehicle, for the map. Walks the pages in case the fleet outgrows one page. */
-  async listAll(): Promise<Vehicle[]> {
-    const filters: VehicleFilters = { search: '', status: null, page: 1, pageSize: MAX_PAGE_SIZE }
+  /**
+   * Every vehicle that matches the search and status, for the map. Walks the pages in case the
+   * fleet outgrows one page.
+   */
+  async listAll({ search, status }: Pick<VehicleFilters, 'search' | 'status'>): Promise<Vehicle[]> {
+    const filters: VehicleFilters = { search, status, page: 1, pageSize: MAX_PAGE_SIZE }
     const first = await vehiclesApi.list(filters)
     const vehicles = [...first.items]
     for (let page = 2; page <= first.pages; page++) {

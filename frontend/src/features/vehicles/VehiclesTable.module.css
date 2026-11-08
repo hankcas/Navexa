@@ -26,6 +26,35 @@
   font-weight: 700;
 }
 
+/* The vehicle name is a button: it selects the vehicle and shows it on the map. */
+.select {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.select:disabled {
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: default;
+}
+
+.selected {
+  background: var(--lilac-100);
+  box-shadow: inset 4px 0 0 var(--color-primary);
+}
+
+.selected .select {
+  color: var(--color-primary);
+}
+
 .table abbr {
   text-decoration: none;
   cursor: help;

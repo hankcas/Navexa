@@ -1,0 +1,97 @@
+.illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 24px 48px rgb(0 0 0 / 35%));
+}
+
+/* A lighter tone of the dark red, so the map stands out from the hero background. */
+.panel {
+  fill: #3a141b;
+}
+
+.blocks rect {
+  fill: #4a1d25;
+}
+
+.route {
+  fill: none;
+  stroke: var(--teal-300);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 2 12;
+}
+
+.moving circle,
+.stopped circle,
+.offline circle {
+  stroke: var(--white);
+  stroke-width: 3;
+}
+
+.moving circle {
+  fill: var(--status-moving);
+}
+
+.stopped circle {
+  fill: var(--status-stopped);
+}
+
+.offline circle {
+  fill: var(--status-offline);
+}
+
+.moving .pulse {
+  stroke: none;
+  opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 2.4s ease-out infinite;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+.cluster circle {
+  fill: var(--red-950);
+  stroke: var(--white);
+  stroke-width: 3;
+}
+
+.cluster text {
+  fill: var(--white);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.card rect {
+  fill: var(--white);
+}
+
+.cardDot {
+  fill: var(--status-moving);
+}
+
+.cardTitle {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.cardText {
+  fill: var(--gray-700);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+}

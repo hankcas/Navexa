@@ -11,8 +11,10 @@ from app.core.security import ACCESS, decode_token
 from app.db.models import User
 from app.db.session import SessionLocal
 from app.domain.permissions import PermissionCode
+from app.integrations.wialon.drivers_gateway import WialonDriverGateway
 from app.integrations.wialon.units_gateway import WialonUnitGateway
 from app.repositories.user_repository import UserRepository
+from app.services.driver_service import DriverService
 from app.services.vehicle_service import VehicleService
 
 ACCESS_COOKIE = "access_token"
@@ -53,10 +55,25 @@ def require_permission(permission: PermissionCode):
     return checker
 
 
-def get_vehicle_service(request: Request) -> VehicleService:
-    gateway = WialonUnitGateway(
+def _unit_gateway(request: Request) -> WialonUnitGateway:
+    return WialonUnitGateway(
         request.app.state.wialon_client,
         moving_speed_kmh=settings.status_moving_speed_kmh,
         offline_after=timedelta(minutes=settings.status_offline_minutes),
     )
-    return VehicleService(gateway)
+
+
+def _driver_gateway(request: Request) -> WialonDriverGateway:
+    return WialonDriverGateway(
+        request.app.state.wialon_client,
+        default_resource_id=settings.wialon_resource_id,
+    )
+
+
+def get_vehicle_service(request: Request) -> VehicleService:
+    return VehicleService(_unit_gateway(request), _driver_gateway(request))
+
+
+def get_driver_service(request: Request, db: DbSession) -> DriverService:
+    """Dependency injection: the service receives its gateways, so tests can pass fakes."""
+    return DriverService(_driver_gateway(request), _unit_gateway(request), db)

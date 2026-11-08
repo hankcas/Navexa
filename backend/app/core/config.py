@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     wialon_base_url: str
     wialon_token: str
+    # Resource where new drivers and passengers are created. Empty: the first one the token sees.
+    wialon_resource_id: int | None = None
     database_url: str
 
     status_moving_speed_kmh: float = 5.0

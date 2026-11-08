@@ -3,7 +3,9 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import { ApiError } from '../../shared/api/errors'
 import { useDebouncedValue } from '../../shared/hooks/useDebouncedValue'
 import { Button } from '../../shared/ui/Button'
+import { ErrorBoundary } from '../../shared/ui/ErrorBoundary'
 import { Pagination } from '../../shared/ui/Pagination'
+import { reloadPage } from '../../shared/ui/reloadPage'
 import { StateMessage } from '../../shared/ui/StateMessage'
 import { TextField } from '../../shared/ui/TextField'
 import { STATUS_LABELS } from './format'
@@ -176,14 +178,25 @@ export function VehiclesPage() {
           ) : (
             <>
               <div className={styles.mapFrame}>
-                <Suspense fallback={<StateMessage loading title="Cargando mapa…" />}>
-                  <VehiclesMap
-                    vehicles={located}
-                    selectedId={selection?.id ?? null}
-                    selectionSource={selection?.source ?? null}
-                    onSelect={selectFromMap}
-                  />
-                </Suspense>
+                {/* If only the map fails, the list keeps working. */}
+                <ErrorBoundary
+                  fallback={
+                    <StateMessage
+                      title="No pudimos mostrar el mapa"
+                      detail="La lista de vehículos sigue disponible. Recarga la página para intentarlo de nuevo."
+                      action={<Button onClick={reloadPage}>Recargar página</Button>}
+                    />
+                  }
+                >
+                  <Suspense fallback={<StateMessage loading title="Cargando mapa…" />}>
+                    <VehiclesMap
+                      vehicles={located}
+                      selectedId={selection?.id ?? null}
+                      selectionSource={selection?.source ?? null}
+                      onSelect={selectFromMap}
+                    />
+                  </Suspense>
+                </ErrorBoundary>
               </div>
               {withoutPosition > 0 && (
                 <p className={styles.mapNote}>

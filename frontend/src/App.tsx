@@ -8,7 +8,10 @@ import { queryClient } from './app/queryClient'
 import { RedirectIfAuthenticated, RequireAuth, RequirePermission } from './features/auth/guards'
 import { PERMISSIONS } from './features/auth/permissions'
 import { LandingPage } from './features/landing/LandingPage'
+import { Button } from './shared/ui/Button'
+import { ErrorBoundary } from './shared/ui/ErrorBoundary'
 import { FullPageState } from './shared/ui/FullPageState'
+import { reloadPage } from './shared/ui/reloadPage'
 import { ServerStatusBanner } from './shared/ui/ServerStatusBanner'
 
 // Private pages load on demand, so the public landing downloads as little JavaScript as possible.
@@ -30,29 +33,40 @@ const VehiclesPage = lazy(() =>
   import('./features/vehicles/VehiclesPage').then((module) => ({ default: module.VehiclesPage })),
 )
 
+/** Shown instead of a blank screen when a page fails to render (ARQ-12). */
+const pageError = (
+  <FullPageState
+    title="Algo salió mal"
+    detail="Ocurrió un error inesperado al mostrar esta página. Recárgala para intentarlo de nuevo."
+    action={<Button onClick={reloadPage}>Recargar página</Button>}
+  />
+)
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ServerStatusBanner />
-        <Suspense fallback={<FullPageState loading title="Cargando…" />}>
-          <Routes>
-            <Route path={PATHS.home} element={<LandingPage />} />
-            <Route element={<RedirectIfAuthenticated />}>
-              <Route path={PATHS.login} element={<LoginPage />} />
-            </Route>
-            <Route element={<RequireAuth />}>
-              <Route path={PATHS.changePassword} element={<ChangePasswordPage />} />
-              <Route path={PATHS.panel} element={<PanelLayout />}>
-                <Route index element={<PanelHome />} />
-                <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
-                  <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+        <ErrorBoundary fallback={pageError}>
+          <Suspense fallback={<FullPageState loading title="Cargando…" />}>
+            <Routes>
+              <Route path={PATHS.home} element={<LandingPage />} />
+              <Route element={<RedirectIfAuthenticated />}>
+                <Route path={PATHS.login} element={<LoginPage />} />
+              </Route>
+              <Route element={<RequireAuth />}>
+                <Route path={PATHS.changePassword} element={<ChangePasswordPage />} />
+                <Route path={PATHS.panel} element={<PanelLayout />}>
+                  <Route index element={<PanelHome />} />
+                  <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
+                    <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+                  </Route>
                 </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   )

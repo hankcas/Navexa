@@ -52,15 +52,16 @@ type PasswordFieldProps = Omit<TextFieldProps, 'type' | 'endAdornment'>
 export function PasswordField(props: PasswordFieldProps) {
   const [visible, setVisible] = useState(false)
 
+  const action = visible ? 'Ocultar' : 'Mostrar'
   const toggle = (
+    // The name says what the next click does ("Mostrar contraseña"), and contains the visible word.
     <button
       type="button"
       className={styles.toggle}
-      aria-pressed={visible}
+      aria-label={`${action} ${props.label.toLowerCase()}`}
       onClick={() => setVisible((current) => !current)}
     >
-      {visible ? 'Ocultar' : 'Mostrar'}
-      <span className="visually-hidden"> {props.label.toLowerCase()}</span>
+      {action}
     </button>
   )
 

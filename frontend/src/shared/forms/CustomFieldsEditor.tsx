@@ -45,9 +45,13 @@ export function CustomFieldsEditor<T extends WithCustomFields>(props: CustomFiel
               error={errors?.[index]?.value?.message}
               {...register(`custom_fields.${index}.value`)}
             />
-            <Button variant="ghost" className={styles.remove} onClick={() => remove(index)}>
+            <Button
+              variant="ghost"
+              className={styles.remove}
+              aria-label={`Quitar campo ${index + 1}`}
+              onClick={() => remove(index)}
+            >
               Quitar
-              <span className="visually-hidden"> campo {index + 1}</span>
             </Button>
           </li>
         ))}

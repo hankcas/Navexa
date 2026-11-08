@@ -12,6 +12,13 @@ export interface Position {
   satellites: number | null
 }
 
+/** The driver bound to a vehicle in Wialon (RF-13). */
+export interface VehicleDriver {
+  id: string
+  name: string
+  phone: string | null
+}
+
 export interface Vehicle {
   id: number
   name: string
@@ -20,6 +27,8 @@ export interface Vehicle {
   /** ISO-8601 in UTC. */
   last_update: string | null
   position: Position | null
+  /** null when no driver is bound to the vehicle. */
+  driver: VehicleDriver | null
 }
 
 export interface VehicleFilters {

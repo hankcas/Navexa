@@ -62,11 +62,13 @@ La interfaz pregunta "¿tiene este permiso?" y nunca "¿es administrador?" ([`pe
 
 | Landing | Dashboard |
 |---|---|
-| ![Landing](docs/capturas/landing.png) | ![Dashboard](docs/capturas/dashboard.png) |
+| ![Landing](docs/capturas/landing.jpg) | ![Dashboard](docs/capturas/dashboard.jpg) |
 
 | Vehículos y mapa | Vista móvil |
 |---|---|
-| ![Mapa de vehículos](docs/capturas/mapa.png) | ![Vista móvil](docs/capturas/movil.png) |
+| ![Mapa de vehículos](docs/capturas/mapa.jpg) | ![Vista móvil](docs/capturas/movil.jpg) |
+
+Capturas tomadas desde un celular en producción. En pantallas angostas, la lista y el mapa de vehículos se alternan con el selector "Lista / Mapa", y el menú del panel baja a una segunda fila.
 
 ---
 

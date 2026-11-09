@@ -13,6 +13,16 @@ function vehiclesPath({ search, status, page, pageSize }: VehicleFilters): strin
   return `/vehicles?${params}`
 }
 
+/** The CSV download with the same search and status as the list (RF-25). */
+export function vehiclesExportPath({ search, status }: Pick<VehicleFilters, 'search' | 'status'>): string {
+  const params = new URLSearchParams()
+  const term = search.trim()
+  if (term) params.set('search', term)
+  if (status) params.set('status', status)
+  const query = params.toString()
+  return `/vehicles/export${query ? `?${query}` : ''}`
+}
+
 export const vehiclesApi = {
   /** One page for the list. Search, filter and pagination happen on the server (RF-10). */
   list: (filters: VehicleFilters) => apiRequest<Page<Vehicle>>(vehiclesPath(filters)),

@@ -3,7 +3,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 
+from app.api.csv_response import CSV_RESPONSES, csv_response
 from app.api.dependencies import (
+    get_export_service,
     get_track_service,
     get_vehicle_fields_service,
     get_vehicle_service,
@@ -21,6 +23,7 @@ from app.schemas.vehicle import (
     Vehicle,
     VehicleDetail,
 )
+from app.services.export_service import ExportService
 from app.services.track_service import TrackService
 from app.services.vehicle_fields_service import VehicleFieldsService
 from app.services.vehicle_service import VehicleService
@@ -28,6 +31,8 @@ from app.services.vehicle_service import VehicleService
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
 Writer = Annotated[User, Depends(require_permission(PermissionCode.VEHICLES_WRITE))]
+Exporter = Annotated[User, Depends(require_permission(PermissionCode.DATA_EXPORT))]
+Exports = Annotated[ExportService, Depends(get_export_service)]
 Fields = Annotated[VehicleFieldsService, Depends(get_vehicle_fields_service)]
 VehicleId = Annotated[int, Path(gt=0)]
 FieldId = Annotated[int, Path(gt=0)]
@@ -54,6 +59,26 @@ async def list_vehicles(
     )
 
 
+# Declared before "/{vehicle_id}": FastAPI tries routes in order, and "export" would otherwise
+# be taken as a vehicle ID (and rejected for not being a number).
+@router.get(
+    "/export",
+    response_class=Response,
+    responses=CSV_RESPONSES,
+    dependencies=[Depends(require_permission(PermissionCode.VEHICLES_READ))],
+)
+async def export_vehicles(
+    actor: Exporter,
+    exports: Exports,
+    request: Request,
+    search: Annotated[str | None, Query(max_length=100)] = None,
+    status: VehicleStatus | None = None,
+) -> Response:
+    """Every vehicle matching the filters, as a CSV for Excel (RF-25)."""
+    file = await exports.vehicles(actor, search=search, status=status, ip=_client_ip(request))
+    return csv_response(file)
+
+
 @router.get(
     "/{vehicle_id}",
     response_model=VehicleDetail,
@@ -73,7 +98,10 @@ async def get_vehicle(
 @router.get(
     "/{vehicle_id}/track",
     response_model=VehicleTrack,
-    dependencies=[Depends(require_permission(PermissionCode.VEHICLES_READ))],
+    dependencies=[
+        Depends(require_permission(PermissionCode.VEHICLES_READ)),
+        Depends(require_permission(PermissionCode.HISTORY_READ)),
+    ],
 )
 async def get_vehicle_track(
     vehicle_id: VehicleId,

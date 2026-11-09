@@ -22,6 +22,15 @@ describe('peopleListPath', () => {
   })
 })
 
+describe('export paths', () => {
+  it('carry the same filters as the list, without pagination', () => {
+    expect(driversResource.api.exportPath({ search: '', assignment: 'all' })).toBe('/drivers/export')
+    expect(passengersResource.api.exportPath({ search: ' sara ', assignment: 'unassigned' })).toBe(
+      '/passengers/export?search=sara&assigned=false',
+    )
+  })
+})
+
 describe('people API clients', () => {
   it('assigns a vehicle with PUT and the vehicle id in the body', async () => {
     const fetchMock = vi.fn(async () => json(200, { id: '1-7', vehicle_id: 500 }))

@@ -194,4 +194,57 @@ describe('DriversPage', () => {
     expect(await screen.findByText('Luis Pérez fue eliminado.')).toBeInTheDocument()
     expect(http.requestsTo('DELETE', '/api/v1/drivers/1-2')).toHaveLength(1)
   })
+
+  it('downloads the CSV with the filters on screen (RF-25)', async () => {
+    const urls: string[] = []
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: () => 'blob:csv', revokeObjectURL: () => {} }))
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        urls.push(url)
+        if (url === '/api/v1/auth/me') return me([...OPERATOR, 'data:export'])
+        if (url.startsWith('/api/v1/drivers/export')) {
+          return new Response('﻿Nombre\r\n', {
+            headers: {
+              'Content-Type': 'text/csv; charset=utf-8',
+              'Content-Disposition': 'attachment; filename="conductores-2026-11-08.csv"',
+            },
+          })
+        }
+        return url === VEHICLES ? page([TRUCK, VAN]) : page([ANA])
+      }),
+    )
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Con vehículo' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Descargar CSV de conductores' }))
+
+    expect(await screen.findByText('Se descargó el archivo de conductores.')).toBeInTheDocument()
+    expect(urls).toContain('/api/v1/drivers/export?assigned=true')
+    const link = click.mock.contexts[0] as HTMLAnchorElement
+    expect(link.download).toBe('conductores-2026-11-08.csv')
+    click.mockRestore()
+  })
+
+  it('hides the CSV button from a role without data:export', async () => {
+    stubFetch({ '/api/v1/auth/me': [me(OPERATOR)], [LIST]: [page([ANA])], [VEHICLES]: [page([TRUCK])] })
+    renderPage()
+
+    await screen.findByRole('rowheader', { name: 'Ana Gómez' })
+    expect(screen.queryByRole('button', { name: 'Descargar CSV de conductores' })).not.toBeInTheDocument()
+  })
+
+  it('explains why a download failed', async () => {
+    stubFetch({
+      '/api/v1/auth/me': [me([...OPERATOR, 'data:export'])],
+      [LIST]: [page([ANA])],
+      [VEHICLES]: [page([TRUCK])],
+      '/api/v1/drivers/export': [json(403, { title: 'Acceso denegado', detail: 'No tienes permiso para realizar esta acción.' })],
+    })
+    renderPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Descargar CSV de conductores' }))
+    expect(await screen.findByText('No tienes permiso para realizar esta acción.')).toBeInTheDocument()
+  })
 })

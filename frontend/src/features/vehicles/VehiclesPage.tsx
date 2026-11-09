@@ -4,10 +4,14 @@ import { ApiError } from '../../shared/api/errors'
 import { useDebouncedValue } from '../../shared/hooks/useDebouncedValue'
 import { Button } from '../../shared/ui/Button'
 import { ErrorBoundary } from '../../shared/ui/ErrorBoundary'
+import { ExportButton } from '../../shared/ui/ExportButton'
 import { Pagination } from '../../shared/ui/Pagination'
 import { reloadPage } from '../../shared/ui/reloadPage'
 import { StateMessage } from '../../shared/ui/StateMessage'
 import { TextField } from '../../shared/ui/TextField'
+import { hasPermission, PERMISSIONS } from '../auth/permissions'
+import { useSession } from '../auth/session'
+import { vehiclesExportPath } from './api'
 import { STATUS_LABELS } from './format'
 import { withPosition } from './location'
 import type { SelectionSource } from './map/VehiclesMap'
@@ -44,6 +48,8 @@ export function VehiclesPage() {
   // Phones show one panel at a time; from 1024 px both are side by side and this has no effect.
   const [mobileView, setMobileView] = useState<MobileView>('list')
   const hasFilters = Boolean(filters.search || filters.status)
+  const { data: user } = useSession()
+  const canExport = hasPermission(user, PERMISSIONS.dataExport)
 
   function selectFromList(id: number) {
     setSelection({ id, source: 'list' })
@@ -62,12 +68,22 @@ export function VehiclesPage() {
     <>
       <title>Vehículos · Navexa</title>
       <header className={styles.header}>
-        <h1 className={styles.title}>Vehículos</h1>
-        {vehicles.data && (
-          <p className={styles.total} aria-live="polite">
-            {vehicles.data.total} {vehicles.data.total === 1 ? 'vehículo' : 'vehículos'}
-            {vehicles.isFetching && <span className={styles.updating}> · Actualizando…</span>}
-          </p>
+        <div>
+          <h1 className={styles.title}>Vehículos</h1>
+          {vehicles.data && (
+            <p className={styles.total} aria-live="polite">
+              {vehicles.data.total} {vehicles.data.total === 1 ? 'vehículo' : 'vehículos'}
+              {vehicles.isFetching && <span className={styles.updating}> · Actualizando…</span>}
+            </p>
+          )}
+        </div>
+        {/* The backend checks data:export again; this only hides a button that would answer 403. */}
+        {canExport && (
+          <ExportButton
+            path={vehiclesExportPath({ search: debouncedSearch, status: filters.status })}
+            fallbackName="vehiculos.csv"
+            what="vehículos"
+          />
         )}
       </header>
 

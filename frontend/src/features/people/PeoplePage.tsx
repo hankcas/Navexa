@@ -4,11 +4,12 @@ import { ApiError } from '../../shared/api/errors'
 import { useDebouncedValue } from '../../shared/hooks/useDebouncedValue'
 import { Button } from '../../shared/ui/Button'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
+import { ExportButton } from '../../shared/ui/ExportButton'
 import { Pagination } from '../../shared/ui/Pagination'
 import { StateMessage } from '../../shared/ui/StateMessage'
 import { TextField } from '../../shared/ui/TextField'
 import { useToast } from '../../shared/ui/toast/toastContext'
-import { hasPermission, type Permission } from '../auth/permissions'
+import { hasPermission, PERMISSIONS, type Permission } from '../auth/permissions'
 import { useSession } from '../auth/session'
 import { AssignVehicleDialog } from './AssignVehicleDialog'
 import styles from './PeoplePage.module.css'
@@ -66,6 +67,8 @@ export function PeoplePage<T extends Person, Input>({
 }: PeoplePageProps<T, Input>) {
   const { data: user } = useSession()
   const canWrite = hasPermission(user, writePermission)
+  // The backend checks it again (data:export); this only hides a button that would answer 403.
+  const canExport = hasPermission(user, PERMISSIONS.dataExport)
   const toast = useToast()
 
   const { filters, update } = usePeopleFilters()
@@ -108,7 +111,16 @@ export function PeoplePage<T extends Person, Input>({
             </p>
           )}
         </div>
-        {canWrite && <Button onClick={() => setForm({ person: null })}>Nuevo {singular}</Button>}
+        <div className={styles.actions}>
+          {canExport && (
+            <ExportButton
+              path={resource.api.exportPath({ search: debouncedSearch, assignment: filters.assignment })}
+              fallbackName={`${plural}.csv`}
+              what={plural}
+            />
+          )}
+          {canWrite && <Button onClick={() => setForm({ person: null })}>Nuevo {singular}</Button>}
+        </div>
       </header>
 
       <section className={styles.card} aria-label={`Lista de ${plural}`}>

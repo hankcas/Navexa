@@ -30,6 +30,7 @@ export function VehicleDetailPage() {
   const detail = useVehicleDetail(validId ? vehicleId : 0)
   const { data: user } = useSession()
   const canWrite = hasPermission(user, PERMISSIONS.vehiclesWrite)
+  const canSeeHistory = hasPermission(user, PERMISSIONS.historyRead)
 
   const back = (
     <Link to={PATHS.vehicles} className={styles.back}>
@@ -147,9 +148,11 @@ export function VehicleDetailPage() {
             <h2 id="position-title" className={styles.cardTitle}>
               Posición
             </h2>
-            <Link to={historyPath(vehicle.id)} className={styles.historyLink}>
-              Ver historial de recorrido
-            </Link>
+            {canSeeHistory && (
+              <Link to={historyPath(vehicle.id)} className={styles.historyLink}>
+                Ver historial de recorrido
+              </Link>
+            )}
             {located.length === 0 ? (
               <p className={styles.muted}>Este vehículo todavía no ha reportado una posición válida.</p>
             ) : (

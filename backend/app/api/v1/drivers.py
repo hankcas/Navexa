@@ -2,19 +2,23 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 
-from app.api.dependencies import get_driver_service, require_permission
+from app.api.csv_response import CSV_RESPONSES, csv_response
+from app.api.dependencies import get_driver_service, get_export_service, require_permission
 from app.db.models import User
 from app.domain.permissions import PermissionCode
 from app.schemas.driver import Driver, DriverCreate, DriverUpdate
 from app.schemas.pagination import Page
 from app.schemas.vehicle import VehicleAssignment
 from app.services.driver_service import DriverService
+from app.services.export_service import ExportService
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 
 Reader = Annotated[User, Depends(require_permission(PermissionCode.DRIVERS_READ))]
 Writer = Annotated[User, Depends(require_permission(PermissionCode.DRIVERS_WRITE))]
 Service = Annotated[DriverService, Depends(get_driver_service)]
+Exporter = Annotated[User, Depends(require_permission(PermissionCode.DATA_EXPORT))]
+Exports = Annotated[ExportService, Depends(get_export_service)]
 # "<resource>-<driver>", e.g. "27668776-7". Anything else never reaches Wialon.
 DriverId = Annotated[str, Path(pattern=r"^\d+-\d+$", examples=["27668776-7"])]
 
@@ -35,6 +39,21 @@ async def list_drivers(
     return await service.list_drivers(
         search=search, assigned=assigned, page=page, page_size=page_size
     )
+
+
+# Before "/{driver_id}", so "export" is not taken as a driver ID.
+@router.get("/export", response_class=Response, responses=CSV_RESPONSES)
+async def export_drivers(
+    _: Reader,
+    actor: Exporter,
+    exports: Exports,
+    request: Request,
+    search: Annotated[str | None, Query(max_length=100, description="Name, code or phone")] = None,
+    assigned: Annotated[bool | None, Query(description="true: with a vehicle, false: without")] = None,
+) -> Response:
+    """Every driver matching the filters, as a CSV for Excel (RF-25)."""
+    file = await exports.drivers(actor, search=search, assigned=assigned, ip=_client_ip(request))
+    return csv_response(file)
 
 
 @router.get("/{driver_id}", response_model=Driver)

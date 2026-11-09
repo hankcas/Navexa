@@ -13,7 +13,7 @@ import { roleLabel } from '../auth/roles'
 import { useSession } from '../auth/session'
 import pageStyles from '../people/PeoplePage.module.css'
 import tableStyles from '../people/PeopleTable.module.css'
-import { formatDateTime } from '../vehicles/format'
+import { formatDate, formatDateTime } from '../vehicles/format'
 import { useUserMutations, useUsersPage } from './queries'
 import { TemporaryPasswordDialog } from './TemporaryPasswordDialog'
 import type { ManagedUser, UserWithTemporaryPassword } from './types'
@@ -152,7 +152,11 @@ export function UsersPage() {
                         <td data-label="Estado">
                           <StatusBadges user={user} />
                         </td>
-                        <td data-label="Creado">{formatDateTime(user.created_at)}</td>
+                        <td data-label="Creado" className={styles.date}>
+                          <time dateTime={user.created_at} title={formatDateTime(user.created_at)}>
+                            {formatDate(user.created_at)}
+                          </time>
+                        </td>
                         <td className={tableStyles.actions}>
                           <Button
                             variant="ghost"

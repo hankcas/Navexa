@@ -38,6 +38,32 @@ export function onSessionExpired(handler: () => void): void {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await successfulResponse(path, options)
+  if (response.status === 204) return undefined as T
+  return (await response.json()) as T
+}
+
+export interface DownloadedFile {
+  blob: Blob
+  filename: string
+}
+
+/**
+ * A file from the API (the CSV exports, RF-25). Same session renewal, wake-up and errors as
+ * any other call; only the answer is kept as a file instead of read as JSON.
+ */
+export async function apiDownload(path: string, fallbackName: string): Promise<DownloadedFile> {
+  const response = await successfulResponse(path, {})
+  return { blob: await response.blob(), filename: filenameFrom(response) ?? fallbackName }
+}
+
+/** The name the backend suggests in Content-Disposition: attachment; filename="…". */
+function filenameFrom(response: Response): string | null {
+  const header = response.headers.get('Content-Disposition') ?? ''
+  return /filename="([^"]+)"/.exec(header)?.[1] ?? null
+}
+
+async function successfulResponse(path: string, options: RequestOptions): Promise<Response> {
   let response = await sendWithWakeUp(path, options)
 
   if (response.status === 401 && !options.skipSessionRefresh && (await refreshSession())) {
@@ -45,8 +71,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (!response.ok) throw await errorFromResponse(response)
-  if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  return response
 }
 
 let wakeUp: Promise<boolean> | null = null
@@ -144,12 +169,13 @@ function requestHeaders(options: RequestOptions): Record<string, string> | undef
 }
 
 /**
- * Our backend always answers JSON (or 204). An HTML or text answer comes from the proxy or from
- * Render while the service is asleep, so it means the backend was not reached.
+ * Our backend always answers JSON, a CSV export or 204. An HTML or plain text answer comes from
+ * the proxy or from Render while the service is asleep, so it means the backend was not reached.
  */
 function isFromOurApi(response: Response): boolean {
   if (response.status === 204) return true
-  return (response.headers.get('Content-Type') ?? '').includes('json')
+  const type = response.headers.get('Content-Type') ?? ''
+  return type.includes('json') || type.startsWith('text/csv')
 }
 
 async function pollHealth(): Promise<boolean> {

@@ -80,7 +80,9 @@ export function App() {
                     <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
                       <Route path={PATHS.vehicles} element={<VehiclesPage />} />
                       <Route path={PATHS.vehicleDetail} element={<VehicleDetailPage />} />
-                      <Route path={PATHS.history} element={<HistoryPage />} />
+                      <Route element={<RequirePermission permission={PERMISSIONS.historyRead} />}>
+                        <Route path={PATHS.history} element={<HistoryPage />} />
+                      </Route>
                     </Route>
                     <Route element={<RequirePermission permission={PERMISSIONS.driversRead} />}>
                       <Route path={PATHS.drivers} element={<DriversPage />} />

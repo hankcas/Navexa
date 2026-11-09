@@ -238,3 +238,34 @@ describe('CSRF token', () => {
     expect(headersOfCall(0)).toEqual({})
   })
 })
+
+describe('apiDownload', () => {
+  function csv(filename?: string): Response {
+    const headers: Record<string, string> = { 'Content-Type': 'text/csv; charset=utf-8' }
+    if (filename) headers['Content-Disposition'] = `attachment; filename="${filename}"`
+    return new Response('﻿Nombre\r\nCamión 01\r\n', { headers })
+  }
+
+  it('takes a CSV as an answer of our API, not as a sleeping server', async () => {
+    reply('/api/v1/vehicles/export', csv('vehiculos-2026-11-08.csv'))
+
+    const file = await client.apiDownload('/vehicles/export', 'vehiculos.csv')
+
+    expect(file.filename).toBe('vehiculos-2026-11-08.csv')
+    expect(await file.blob.text()).toContain('Camión 01')
+    expect(callsTo('/api/health')).toBe(0)
+  })
+
+  it('uses the fallback name when the backend suggests none', async () => {
+    reply('/api/v1/vehicles/export', csv())
+    expect((await client.apiDownload('/vehicles/export', 'vehiculos.csv')).filename).toBe('vehiculos.csv')
+  })
+
+  it('fails with the Problem Details of the backend', async () => {
+    reply(
+      '/api/v1/vehicles/export',
+      json(403, { title: 'Acceso denegado', detail: 'Sin permiso.' }, 'application/problem+json'),
+    )
+    await expect(client.apiDownload('/vehicles/export', 'x.csv')).rejects.toMatchObject({ status: 403 })
+  })
+})

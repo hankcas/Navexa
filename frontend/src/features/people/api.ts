@@ -9,13 +9,21 @@ export interface PeopleApi<T extends Person, Input> {
   remove: (id: string) => Promise<void>
   assignVehicle: (id: string, vehicleId: number) => Promise<T>
   unassignVehicle: (id: string) => Promise<T>
+  /** The CSV download with the same search and assignment filter as the list (RF-25). */
+  exportPath: (filters: Pick<PeopleFilters, 'search' | 'assignment'>) => string
+}
+
+function filterParams({ search, assignment }: Pick<PeopleFilters, 'search' | 'assignment'>): URLSearchParams {
+  const params = new URLSearchParams()
+  const term = search.trim()
+  if (term) params.set('search', term)
+  if (assignment !== 'all') params.set('assigned', String(assignment === 'assigned'))
+  return params
 }
 
 export function peopleListPath(basePath: string, filters: PeopleFilters): string {
   const params = new URLSearchParams({ page: String(filters.page), page_size: String(filters.pageSize) })
-  const term = filters.search.trim()
-  if (term) params.set('search', term)
-  if (filters.assignment !== 'all') params.set('assigned', String(filters.assignment === 'assigned'))
+  for (const [name, value] of filterParams(filters)) params.set(name, value)
   return `${basePath}?${params}`
 }
 
@@ -33,5 +41,9 @@ export function createPeopleApi<T extends Person, Input>(basePath: string): Peop
     assignVehicle: (id, vehicleId) =>
       apiRequest<T>(`${itemPath(id)}/vehicle`, { method: 'PUT', body: { vehicle_id: vehicleId } }),
     unassignVehicle: (id) => apiRequest<T>(`${itemPath(id)}/vehicle`, { method: 'DELETE' }),
+    exportPath: (filters) => {
+      const query = filterParams(filters).toString()
+      return `${basePath}/export${query ? `?${query}` : ''}`
+    },
   }
 }

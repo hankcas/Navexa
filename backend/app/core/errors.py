@@ -1,4 +1,5 @@
 import logging
+import math
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -9,6 +10,7 @@ from app.core.exceptions import (
     AuthenticationError,
     BusinessRuleError,
     PermissionDeniedError,
+    RateLimitedError,
 )
 from app.integrations.wialon.exceptions import WialonError, WialonUnavailableError
 
@@ -55,6 +57,19 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(BusinessRuleError)
     async def business_rule_error(request: Request, exc: BusinessRuleError):
         return problem(request, exc.status_code, exc.title, exc.message)
+
+    @app.exception_handler(RateLimitedError)
+    async def rate_limited(request: Request, exc: RateLimitedError):
+        logger.warning("Rate limit reached on %s", request.url.path)
+        wait = max(1, math.ceil(exc.retry_after_seconds))
+        response = problem(
+            request,
+            429,
+            "Demasiados intentos",
+            f"Hiciste demasiados intentos seguidos. Espera {math.ceil(wait / 60)} minuto(s) e inténtalo de nuevo.",
+        )
+        response.headers["Retry-After"] = str(wait)
+        return response
 
     @app.exception_handler(WialonUnavailableError)  
     async def wialon_unavailable(request: Request, exc: WialonUnavailableError):

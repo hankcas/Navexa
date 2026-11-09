@@ -22,8 +22,22 @@ class Settings(BaseSettings):
     jwt_secret: str
     access_token_minutes: int = 15
     refresh_token_days: int = 7
+    # Login attempts allowed per IP in the window, on top of the per-account lock (SEG-07).
+    login_rate_limit_attempts: int = 10
+    login_rate_limit_window_seconds: int = 300
     cookie_secure: bool = True
     cookie_samesite: str = "lax"
+
+    # Browsers reach the API through the Vercel proxy (same origin), so no origin is needed.
+    # If one is ever needed, list it here; nothing else is allowed (DEP-03).
+    cors_origins: list[str] = []
+    # Swagger UI and the OpenAPI schema. Every endpoint is protected anyway; set to false to
+    # hide the documentation in production (SEG-05).
+    docs_enabled: bool = True
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
 
 
 settings = Settings()

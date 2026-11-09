@@ -1,0 +1,45 @@
+.map {
+  width: 100%;
+  height: 100%;
+  min-height: 24rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+}
+
+/* Leaflet draws each piece of the route as an SVG path with these classes. A CSS rule wins
+   over the color attribute Leaflet writes, so the line uses the palette tokens. */
+.stopped,
+.normal,
+.fast {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0.9;
+}
+
+.stopped {
+  stroke: var(--speed-stopped);
+}
+
+.normal {
+  stroke: var(--speed-normal);
+}
+
+.fast {
+  stroke: var(--speed-fast);
+}
+
+.start,
+.end {
+  stroke: var(--white);
+  stroke-width: 3;
+  fill-opacity: 1;
+}
+
+.start {
+  fill: var(--color-accent);
+}
+
+.end {
+  fill: var(--color-surface-dark);
+}

@@ -42,6 +42,23 @@ export function vehicleIcon(vehicle: LocatedVehicle, selected: boolean): L.DivIc
   })
 }
 
+/** The vehicle moving along its route in the history playback: same look as on the live map. */
+export function playbackIcon(moving: boolean, heading: number | null): L.DivIcon {
+  const position = { latitude: 0, longitude: 0, altitude_m: null, heading, satellites: null }
+  return vehicleIcon(
+    {
+      id: 0,
+      name: '',
+      status: moving ? 'moving' : 'stopped',
+      speed_kmh: null,
+      last_update: null,
+      position,
+      driver: null,
+    },
+    true,
+  )
+}
+
 /** Cluster bubble in the palette instead of the plugin's default green and yellow. */
 export function clusterIcon(cluster: L.MarkerCluster): L.DivIcon {
   const count = cluster.getChildCount()

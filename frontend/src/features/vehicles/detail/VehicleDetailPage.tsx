@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { PATHS } from '../../../app/paths'
+import { historyPath, PATHS } from '../../../app/paths'
 import { ApiError } from '../../../shared/api/errors'
 import { Button } from '../../../shared/ui/Button'
 import { ErrorBoundary } from '../../../shared/ui/ErrorBoundary'
@@ -147,6 +147,9 @@ export function VehicleDetailPage() {
             <h2 id="position-title" className={styles.cardTitle}>
               Posición
             </h2>
+            <Link to={historyPath(vehicle.id)} className={styles.historyLink}>
+              Ver historial de recorrido
+            </Link>
             {located.length === 0 ? (
               <p className={styles.muted}>Este vehículo todavía no ha reportado una posición válida.</p>
             ) : (

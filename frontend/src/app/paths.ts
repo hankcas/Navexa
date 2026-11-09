@@ -6,6 +6,7 @@ export const PATHS = {
   panel: '/panel',
   vehicles: '/panel/vehiculos',
   vehicleDetail: '/panel/vehiculos/:vehicleId',
+  history: '/panel/historial',
   drivers: '/panel/conductores',
   passengers: '/panel/pasajeros',
   users: '/panel/usuarios',
@@ -14,4 +15,9 @@ export const PATHS = {
 /** Link to one vehicle's page, e.g. /panel/vehiculos/30498948. */
 export function vehiclePath(vehicleId: number): string {
   return PATHS.vehicleDetail.replace(':vehicleId', String(vehicleId))
+}
+
+/** Route history of one vehicle; the page fills in the last 24 hours. */
+export function historyPath(vehicleId: number): string {
+  return `${PATHS.history}?${new URLSearchParams({ vehiculo: String(vehicleId) })}`
 }

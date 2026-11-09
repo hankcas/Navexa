@@ -42,6 +42,11 @@
   --status-offline: var(--red-500);
   --status-no-position: var(--red-950);
 
+  /* Speed bands of the route history line */
+  --speed-stopped: var(--gray-500);
+  --speed-normal: var(--teal-500);
+  --speed-fast: var(--red-500);
+
   --font-sans: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --space-1: 0.25rem;

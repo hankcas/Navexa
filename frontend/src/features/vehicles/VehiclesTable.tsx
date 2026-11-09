@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
+import { vehiclePath } from '../../app/paths'
 import { formatDateTime, formatRelative, formatSpeed, headingToCardinal } from './format'
 import { StatusBadge } from './StatusBadge'
 import type { Vehicle } from './types'
@@ -37,6 +39,9 @@ export function VehiclesTable({ vehicles, selectedId, scrollToSelected, onSelect
             <th scope="col">Velocidad</th>
             <th scope="col">Rumbo</th>
             <th scope="col">Actualizado</th>
+            <th scope="col">
+              <span className="visually-hidden">Detalle</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -75,6 +80,15 @@ export function VehiclesTable({ vehicles, selectedId, scrollToSelected, onSelect
                   >
                     {formatRelative(vehicle.last_update)}
                   </time>
+                </td>
+                <td className={styles.detail}>
+                  <Link
+                    to={vehiclePath(vehicle.id)}
+                    className={styles.detailLink}
+                    aria-label={`Ver detalle de ${vehicle.name}`}
+                  >
+                    Ver detalle
+                  </Link>
                 </td>
               </tr>
             )

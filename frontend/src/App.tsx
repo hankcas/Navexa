@@ -33,6 +33,11 @@ const PanelHome = lazy(() =>
 const VehiclesPage = lazy(() =>
   import('./features/vehicles/VehiclesPage').then((module) => ({ default: module.VehiclesPage })),
 )
+const VehicleDetailPage = lazy(() =>
+  import('./features/vehicles/detail/VehicleDetailPage').then((module) => ({
+    default: module.VehicleDetailPage,
+  })),
+)
 const DriversPage = lazy(() =>
   import('./features/drivers/DriversPage').then((module) => ({ default: module.DriversPage })),
 )
@@ -71,6 +76,7 @@ export function App() {
                     <Route index element={<PanelHome />} />
                     <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
                       <Route path={PATHS.vehicles} element={<VehiclesPage />} />
+                      <Route path={PATHS.vehicleDetail} element={<VehicleDetailPage />} />
                     </Route>
                     <Route element={<RequirePermission permission={PERMISSIONS.driversRead} />}>
                       <Route path={PATHS.drivers} element={<DriversPage />} />

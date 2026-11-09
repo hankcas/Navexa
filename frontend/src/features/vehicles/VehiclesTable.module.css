@@ -68,6 +68,28 @@
   cursor: help;
 }
 
+.detail {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.detailLink {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+@container (max-width: 40rem) {
+  .detail {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  /* No column name above the link in the card layout. */
+  .table td.detail::before {
+    content: none;
+  }
+}
+
 /* Narrow container: every row becomes a card with labelled cells, nothing overflows. */
 @container (max-width: 40rem) {
   .table thead {

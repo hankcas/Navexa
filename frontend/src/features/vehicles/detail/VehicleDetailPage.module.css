@@ -1,0 +1,190 @@
+.back {
+  align-self: flex-start;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.title {
+  font-size: 1.75rem;
+  overflow-wrap: anywhere;
+}
+
+.updated {
+  flex-basis: 100%;
+  color: var(--color-text-muted);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.subTitle {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.data {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+}
+
+.data dt {
+  color: var(--color-text-muted);
+}
+
+.data dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+}
+
+.personName {
+  font-weight: 700;
+}
+
+.passengers {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-6);
+}
+
+.map {
+  height: 18rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fieldText {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fieldName {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.fieldValue {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.fieldStatus {
+  color: var(--color-success);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.fieldStatus:empty {
+  display: none;
+}
+
+.fieldActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.fieldActions button {
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-size: 0.875rem;
+}
+
+.fieldError {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+.fieldForm {
+  display: grid;
+  flex: 1;
+  gap: var(--space-3);
+}
+
+.danger {
+  color: var(--color-error) !important;
+}
+
+.newField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--color-border);
+}
+
+.newField > button {
+  align-self: flex-start;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 2fr 3fr;
+    align-items: start;
+  }
+}

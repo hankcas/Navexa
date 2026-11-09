@@ -5,7 +5,9 @@ import L from 'leaflet'
 import { useEffect, useRef, type RefObject } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
+import { Link } from 'react-router-dom'
 
+import { vehiclePath } from '../../../app/paths'
 import { formatDateTime, formatRelative, formatSpeed, headingToCardinal } from '../format'
 import type { LocatedVehicle } from '../location'
 import { StatusBadge } from '../StatusBadge'
@@ -23,6 +25,8 @@ export interface VehiclesMapProps {
   selectedId: number | null
   selectionSource: SelectionSource | null
   onSelect: (id: number) => void
+  /** Link to the vehicle page in each popup. Off on the vehicle page itself. */
+  showDetailLink?: boolean
 }
 
 /**
@@ -79,7 +83,13 @@ function FocusSelected({ selectedId, selectionSource, markers, cluster }: FocusS
   return null
 }
 
-export function VehiclesMap({ vehicles, selectedId, selectionSource, onSelect }: VehiclesMapProps) {
+export function VehiclesMap({
+  vehicles,
+  selectedId,
+  selectionSource,
+  onSelect,
+  showDetailLink = true,
+}: VehiclesMapProps) {
   const clusterRef = useRef<L.MarkerClusterGroup>(null)
   const markerRefs = useRef(new Map<number, L.Marker>())
 
@@ -132,6 +142,15 @@ export function VehiclesMap({ vehicles, selectedId, selectionSource, onSelect }:
                     <dt>Actualizado</dt>
                     <dd title={formatDateTime(vehicle.last_update)}>{formatRelative(vehicle.last_update)}</dd>
                   </dl>
+                  {showDetailLink && (
+                    <Link
+                      to={vehiclePath(vehicle.id)}
+                      className={styles.popupLink}
+                      aria-label={`Ver detalle de ${vehicle.name}`}
+                    >
+                      Ver detalle
+                    </Link>
+                  )}
                 </div>
               </Popup>
             </Marker>

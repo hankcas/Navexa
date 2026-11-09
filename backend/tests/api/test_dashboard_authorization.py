@@ -1,6 +1,5 @@
 """TST-02: every role sees the dashboard (section 5.3); without a session nobody does."""
 import pytest
-from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_current_user, get_dashboard_service
 from app.core.exceptions import AuthenticationError
@@ -8,6 +7,7 @@ from app.db.models import Permission, Role, User
 from app.domain.permissions import DEFAULT_ROLE_PERMISSIONS, RoleName
 from app.main import app
 from app.services.dashboard_service import DashboardService
+from tests.api.helpers import browser_client
 from tests.unit.test_dashboard_service import DRIVERS, PASSENGERS, VEHICLES, Static
 
 
@@ -29,7 +29,7 @@ def client():
     app.dependency_overrides[get_dashboard_service] = lambda: DashboardService(
         Static(VEHICLES), Static(DRIVERS), Static(PASSENGERS)
     )
-    yield TestClient(app)
+    yield browser_client()
     app.dependency_overrides.clear()
 
 

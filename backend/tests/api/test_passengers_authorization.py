@@ -1,6 +1,5 @@
 """TST-02: each role can do exactly what the permission matrix (section 5.3) allows on passengers."""
 import pytest
-from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_current_user, get_passenger_service
 from app.core.exceptions import AuthenticationError
@@ -9,6 +8,7 @@ from app.domain.permissions import DEFAULT_ROLE_PERMISSIONS, RoleName
 from app.main import app
 from app.schemas.passenger import Passenger
 from app.services.passenger_service import PassengerService
+from tests.api.helpers import browser_client
 from tests.fakes import FakePassengerGateway, FakeSession, FakeVehicles
 
 FREE_PASSENGER = Passenger(id="1-1", name="Laura Ríos")
@@ -46,7 +46,7 @@ def client():
         return PassengerService(FakePassengerGateway(FREE_PASSENGER), FakeVehicles(500), FakeSession())
 
     app.dependency_overrides[get_passenger_service] = fake_service
-    yield TestClient(app)
+    yield browser_client()
     app.dependency_overrides.clear()
 
 

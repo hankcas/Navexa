@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Response, status
 
 from app.api.dependencies import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUserDep, DbSession
 from app.core.config import settings
+from app.core.csrf import CSRF_COOKIE, clear_csrf_cookie, set_csrf_cookie
 from app.core.exceptions import AuthenticationError
 from app.core.security import ACCESS, REFRESH, create_token, decode_token
 from app.db.models import User
@@ -54,6 +55,16 @@ def _set_session_cookies(response: Response, user: User) -> None:
 def _clear_session_cookies(response: Response) -> None:
     response.delete_cookie(ACCESS_COOKIE, path="/")
     response.delete_cookie(REFRESH_COOKIE, path=REFRESH_COOKIE_PATH)
+    clear_csrf_cookie(response)
+
+
+def _ensure_csrf_cookie(request: Request, response: Response) -> None:
+    """Hands a CSRF token to sessions that do not have one yet (e.g. opened before it existed).
+
+    It is not rotated here: a request already in flight with the current token would fail.
+    """
+    if CSRF_COOKIE not in request.cookies:
+        set_csrf_cookie(response)
 
 
 @router.post("/login", response_model=CurrentUser)
@@ -64,6 +75,8 @@ async def login(
         body.email, body.password, _client_ip(request)
     )
     _set_session_cookies(response, user)
+    # A fresh token for every new session (SEG-11).
+    set_csrf_cookie(response)
     return _to_current_user(user)
 
 
@@ -76,6 +89,7 @@ async def refresh(request: Request, response: Response, db: DbSession) -> Curren
         _clear_session_cookies(response)
         raise AuthenticationError("Invalid refresh token")
     _set_session_cookies(response, user)
+    _ensure_csrf_cookie(request, response)
     return _to_current_user(user)
 
 
@@ -91,6 +105,7 @@ async def change_password(
         user, body.current_password, body.new_password, _client_ip(request)
     )
     _set_session_cookies(response, user)
+    set_csrf_cookie(response)
     return _to_current_user(user)
 
 
@@ -103,5 +118,6 @@ async def logout(
 
 
 @router.get("/me", response_model=CurrentUser)
-async def me(user: CurrentUserDep) -> CurrentUser:
+async def me(user: CurrentUserDep, request: Request, response: Response) -> CurrentUser:
+    _ensure_csrf_cookie(request, response)
     return _to_current_user(user)

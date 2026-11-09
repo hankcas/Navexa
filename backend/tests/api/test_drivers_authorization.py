@@ -9,6 +9,7 @@ from app.domain.permissions import DEFAULT_ROLE_PERMISSIONS, RoleName
 from app.main import app
 from app.schemas.driver import Driver
 from app.services.driver_service import DriverService
+from tests.api.helpers import browser_client
 from tests.fakes import FakeDriverGateway, FakeSession, FakeVehicles
 
 FREE_DRIVER = Driver(id="1-1", name="Ana Gómez")
@@ -42,7 +43,7 @@ def client():
         return DriverService(FakeDriverGateway(FREE_DRIVER), FakeVehicles(500), FakeSession())
 
     app.dependency_overrides[get_driver_service] = fake_service
-    yield TestClient(app)
+    yield browser_client()
     app.dependency_overrides.clear()
 
 

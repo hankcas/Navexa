@@ -14,7 +14,9 @@ from app.domain.permissions import PermissionCode
 from app.integrations.wialon.drivers_gateway import WialonDriverGateway
 from app.integrations.wialon.passengers_gateway import WialonPassengerGateway
 from app.integrations.wialon.units_gateway import WialonUnitGateway
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.user_repository import UserRepository
+from app.services.audit_query_service import AuditQueryService
 from app.services.dashboard_service import DashboardService
 from app.services.driver_service import DriverService
 from app.services.export_service import ExportService
@@ -119,6 +121,10 @@ def get_dashboard_service(request: Request) -> DashboardService:
     return DashboardService(
         _unit_gateway(request), _driver_gateway(request), _passenger_gateway(request)
     )
+
+
+def get_audit_query_service(db: DbSession) -> AuditQueryService:
+    return AuditQueryService(AuditRepository(db))
 
 
 def get_export_service(request: Request, db: DbSession) -> ExportService:

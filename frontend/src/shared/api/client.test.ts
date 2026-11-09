@@ -200,3 +200,41 @@ describe('session refresh', () => {
     expect(callsTo('/api/v1/auth/refresh')).toBe(0)
   })
 })
+
+describe('CSRF token', () => {
+  function headersOfCall(index: number): Record<string, string> {
+    const init = fetchMock.mock.calls[index][1] as RequestInit
+    return (init.headers ?? {}) as Record<string, string>
+  }
+
+  afterEach(() => {
+    document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+  })
+
+  it('sends the cookie value in the X-CSRF-Token header on writes', async () => {
+    document.cookie = 'csrf_token=abc.123; path=/'
+    reply('/api/v1/drivers', json(201, { id: '1-1' }))
+
+    await client.apiRequest('/drivers', { method: 'POST', body: { name: 'Ana' } })
+
+    expect(headersOfCall(0)).toEqual({ 'Content-Type': 'application/json', 'X-CSRF-Token': 'abc.123' })
+  })
+
+  it('also protects writes without a body, like DELETE', async () => {
+    document.cookie = 'csrf_token=abc.123; path=/'
+    reply('/api/v1/drivers/1-1', new Response(null, { status: 204 }))
+
+    await client.apiRequest('/drivers/1-1', { method: 'DELETE' })
+
+    expect(headersOfCall(0)).toEqual({ 'X-CSRF-Token': 'abc.123' })
+  })
+
+  it('does not send it on reads', async () => {
+    document.cookie = 'csrf_token=abc.123; path=/'
+    reply('/api/v1/vehicles', json(200, { total: 1 }))
+
+    await client.apiRequest('/vehicles')
+
+    expect(headersOfCall(0)).toEqual({})
+  })
+})

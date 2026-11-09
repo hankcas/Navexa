@@ -10,6 +10,7 @@ export const PATHS = {
   drivers: '/panel/conductores',
   passengers: '/panel/pasajeros',
   users: '/panel/usuarios',
+  audit: '/panel/auditoria',
 } as const
 
 /** Link to one vehicle's page, e.g. /panel/vehiculos/30498948. */

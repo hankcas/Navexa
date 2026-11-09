@@ -1,0 +1,11 @@
+.date {
+  white-space: nowrap;
+}
+
+.wrap {
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}

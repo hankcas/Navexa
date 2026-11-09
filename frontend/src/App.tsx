@@ -47,6 +47,9 @@ const DriversPage = lazy(() =>
 const PassengersPage = lazy(() =>
   import('./features/passengers/PassengersPage').then((module) => ({ default: module.PassengersPage })),
 )
+const AuditPage = lazy(() =>
+  import('./features/audit/AuditPage').then((module) => ({ default: module.AuditPage })),
+)
 const UsersPage = lazy(() =>
   import('./features/users/UsersPage').then((module) => ({ default: module.UsersPage })),
 )
@@ -92,6 +95,9 @@ export function App() {
                     </Route>
                     <Route element={<RequirePermission permission={PERMISSIONS.usersManage} />}>
                       <Route path={PATHS.users} element={<UsersPage />} />
+                    </Route>
+                    <Route element={<RequirePermission permission={PERMISSIONS.auditRead} />}>
+                      <Route path={PATHS.audit} element={<AuditPage />} />
                     </Route>
                   </Route>
                 </Route>

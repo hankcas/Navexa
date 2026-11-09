@@ -18,4 +18,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: PATHS.drivers, label: 'Conductores', permission: PERMISSIONS.driversRead },
   { to: PATHS.passengers, label: 'Pasajeros', permission: PERMISSIONS.passengersRead },
   { to: PATHS.users, label: 'Usuarios', permission: PERMISSIONS.usersManage },
+  { to: PATHS.audit, label: 'Auditoría', permission: PERMISSIONS.auditRead },
 ]

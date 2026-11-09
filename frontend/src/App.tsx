@@ -39,6 +39,9 @@ const DriversPage = lazy(() =>
 const PassengersPage = lazy(() =>
   import('./features/passengers/PassengersPage').then((module) => ({ default: module.PassengersPage })),
 )
+const UsersPage = lazy(() =>
+  import('./features/users/UsersPage').then((module) => ({ default: module.UsersPage })),
+)
 
 /** Shown instead of a blank screen when a page fails to render (ARQ-12). */
 const pageError = (
@@ -74,6 +77,9 @@ export function App() {
                     </Route>
                     <Route element={<RequirePermission permission={PERMISSIONS.passengersRead} />}>
                       <Route path={PATHS.passengers} element={<PassengersPage />} />
+                    </Route>
+                    <Route element={<RequirePermission permission={PERMISSIONS.usersManage} />}>
+                      <Route path={PATHS.users} element={<UsersPage />} />
                     </Route>
                   </Route>
                 </Route>

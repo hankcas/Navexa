@@ -7,4 +7,5 @@ export const PATHS = {
   vehicles: '/panel/vehiculos',
   drivers: '/panel/conductores',
   passengers: '/panel/pasajeros',
+  users: '/panel/usuarios',
 } as const

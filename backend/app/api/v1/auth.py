@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.api.dependencies import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUserDep, DbSession
 from app.core.config import settings
 from app.core.csrf import CSRF_COOKIE, clear_csrf_cookie, set_csrf_cookie
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, RateLimitedError
+from app.core.rate_limit import SlidingWindowRateLimiter
 from app.core.security import ACCESS, REFRESH, create_token, decode_token
 from app.db.models import User
 from app.repositories.user_repository import UserRepository
@@ -67,7 +68,19 @@ def _ensure_csrf_cookie(request: Request, response: Response) -> None:
         set_csrf_cookie(response)
 
 
-@router.post("/login", response_model=CurrentUser)
+login_rate_limiter = SlidingWindowRateLimiter(
+    settings.login_rate_limit_attempts, settings.login_rate_limit_window_seconds
+)
+
+
+def limit_login_attempts(request: Request) -> None:
+    """Every login attempt counts, right or wrong, so guessing passwords from one IP is slow (SEG-07)."""
+    retry_after = login_rate_limiter.hit(_client_ip(request) or "unknown")
+    if retry_after is not None:
+        raise RateLimitedError(retry_after)
+
+
+@router.post("/login", response_model=CurrentUser, dependencies=[Depends(limit_login_attempts)])
 async def login(
     body: LoginRequest, request: Request, response: Response, db: DbSession
 ) -> CurrentUser:

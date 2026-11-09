@@ -53,6 +53,20 @@ export function formatDateTime(iso: string | null): string {
   return Number.isNaN(date.getTime()) ? 'Sin dato' : dateTimeFormat.format(date)
 }
 
+const dateFormat = new Intl.DateTimeFormat(LOCALE, {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+/** Only the day, in Colombia time ("6 de nov de 2026"), for creation dates. */
+export function formatDate(iso: string | null): string {
+  if (!iso) return 'Sin dato'
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime()) ? 'Sin dato' : dateFormat.format(date)
+}
+
 const relativeFormat = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' })
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [

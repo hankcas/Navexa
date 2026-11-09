@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDateTime, formatRelative, formatSpeed, headingToCardinal } from './format'
+import { formatDate, formatDateTime, formatRelative, formatSpeed, headingToCardinal } from './format'
 
 describe('headingToCardinal', () => {
   it.each([
@@ -65,5 +65,18 @@ describe('formatRelative', () => {
 
   it('handles a missing value', () => {
     expect(formatRelative(null, now)).toBe('Sin dato')
+  })
+})
+
+describe('formatDate', () => {
+  it('shows only the day in Bogota time', () => {
+    // 2026-11-07 03:00 UTC is still 6 November in Bogota (UTC-5).
+    const formatted = formatDate('2026-11-07T03:00:00Z')
+    expect(formatted).toMatch(/\b6\b.*nov.*2026/)
+    expect(formatted).not.toMatch(/:/)
+  })
+
+  it('handles missing values', () => {
+    expect(formatDate(null)).toBe('Sin dato')
   })
 })

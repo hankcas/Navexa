@@ -34,8 +34,18 @@
   font-weight: 600;
 }
 
-.email {
-  overflow-wrap: anywhere;
+.date {
+  white-space: nowrap;
+}
+
+/*
+ * On the desktop table the email keeps its width; only in the card layout, where a long
+ * address would not fit, it may break anywhere. The container is defined by PeopleTable.
+ */
+@container (max-width: 48rem) {
+  .email {
+    overflow-wrap: anywhere;
+  }
 }
 
 .passwordBox {

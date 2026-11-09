@@ -105,7 +105,7 @@ async function send(path: string, options: RequestOptions): Promise<Response | n
     const response = await fetch(API_PREFIX + path, {
       method: options.method ?? 'GET',
       credentials: 'same-origin',
-      headers: options.body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: requestHeaders(options),
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
@@ -117,6 +117,30 @@ async function send(path: string, options: RequestOptions): Promise<Response | n
   } finally {
     clearTimeout(slowTimer)
   }
+}
+
+const CSRF_COOKIE = 'csrf_token'
+const CSRF_HEADER = 'X-CSRF-Token'
+
+/** Reads one cookie the backend left readable on purpose (the session cookies are HttpOnly). */
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`
+  const entry = document.cookie.split('; ').find((cookie) => cookie.startsWith(prefix))
+  return entry ? decodeURIComponent(entry.slice(prefix.length)) : null
+}
+
+/**
+ * Every state-changing request carries the CSRF token in a header (SEG-11). It is read on each
+ * send, so a request replayed after a login or refresh uses the current token.
+ */
+function requestHeaders(options: RequestOptions): Record<string, string> | undefined {
+  const headers: Record<string, string> = {}
+  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  if ((options.method ?? 'GET') !== 'GET') {
+    const token = readCookie(CSRF_COOKIE)
+    if (token) headers[CSRF_HEADER] = token
+  }
+  return Object.keys(headers).length > 0 ? headers : undefined
 }
 
 /**

@@ -33,14 +33,19 @@
   text-decoration: none;
 }
 
+/* The tabs wrap onto a second row when they do not fit. Without it, seven tabs on a phone pushed
+   the page wider than the screen and the browser zoomed everything out. */
 .nav {
   display: flex;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
   order: 3;
   width: 100%;
+  min-width: 0;
 }
 
 .navLink {
+  white-space: nowrap;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
@@ -100,7 +105,9 @@
     padding: var(--space-3) var(--space-8);
   }
 
+  /* Between the logo and the account, taking the space left; it can still wrap on tablets. */
   .nav {
+    flex: 1;
     order: 0;
     width: auto;
   }

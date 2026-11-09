@@ -70,3 +70,49 @@ def test_most_recent_binding_wins_when_wialon_has_several():
 
 def test_unbound_drivers_are_ignored():
     assert assigned_drivers([LUIS]) == {}
+
+
+class DetailVehicles(StaticVehicles):
+    async def get_vehicle(self, vehicle_id):
+        from app.schemas.vehicle import CustomField
+
+        if vehicle_id != 500:
+            return None
+        return TRUCK, [CustomField(id=1, name="Placa", value="ABC123")]
+
+
+class StaticPassengers:
+    def __init__(self, *passengers):
+        self._passengers = list(passengers)
+
+    async def list_passengers(self):
+        return self._passengers
+
+
+async def test_detail_brings_driver_passengers_and_custom_fields():
+    from app.schemas.passenger import Passenger
+
+    passengers = StaticPassengers(
+        Passenger(id="1-12", name="Sara", vehicle_id=500),
+        Passenger(id="1-10", name="Laura", vehicle_id=500),
+        Passenger(id="1-11", name="Pedro", vehicle_id=600),
+    )
+    service = VehicleService(DetailVehicles(TRUCK, VAN), StaticDrivers(ANA), passengers)
+
+    detail = await service.get_vehicle_detail(500)
+
+    assert detail.name == "Camión 01"
+    assert detail.driver is not None and detail.driver.name == "Ana Gómez"
+    assert [p.name for p in detail.passengers] == ["Laura", "Sara"]
+    assert [(f.name, f.value) for f in detail.custom_fields] == [("Placa", "ABC123")]
+
+
+async def test_detail_of_an_unknown_vehicle_is_404():
+    import pytest
+
+    from app.core.exceptions import BusinessRuleError
+
+    service = VehicleService(DetailVehicles(TRUCK), StaticDrivers(), StaticPassengers())
+    with pytest.raises(BusinessRuleError) as raised:
+        await service.get_vehicle_detail(999)
+    assert raised.value.status_code == 404

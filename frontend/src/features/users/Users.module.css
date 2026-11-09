@@ -1,0 +1,70 @@
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.badge {
+  padding: 0.125rem var(--space-2);
+  border-radius: 999px;
+  background: var(--lilac-100);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.active {
+  background: var(--teal-700);
+  color: var(--white);
+}
+
+.inactive {
+  background: var(--gray-700);
+  color: var(--white);
+}
+
+.locked {
+  background: var(--red-700);
+  color: var(--white);
+}
+
+.self {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.email {
+  overflow-wrap: anywhere;
+}
+
+.passwordBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.passwordRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.password {
+  flex: 1;
+  min-width: 12rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-input-border);
+  border-radius: var(--radius-sm);
+  background: var(--lilac-50);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.warning {
+  color: var(--color-error);
+  font-weight: 700;
+}

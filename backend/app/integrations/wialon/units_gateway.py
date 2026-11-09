@@ -1,17 +1,26 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.integrations.wialon.client import WialonClient
 from app.integrations.wialon.exceptions import WialonError
-from app.integrations.wialon.mappers import map_unit_to_vehicle
+from app.integrations.wialon.mappers import map_message_to_track_point, map_unit_to_vehicle
 from app.integrations.wialon.resources import NOT_FOUND_CODES
+from app.schemas.track import TrackPoint
 from app.schemas.vehicle import CustomField, Vehicle
+
+logger = logging.getLogger(__name__)
 
 BASE_DATA_FLAG = 1
 CUSTOM_FIELDS_FLAG = 8
 LAST_POSITION_FLAG = 1024
 UNIT_FLAGS = BASE_DATA_FLAG | LAST_POSITION_FLAG
 UNIT_DETAIL_FLAGS = UNIT_FLAGS | CUSTOM_FIELDS_FLAG
+
+# Message filter: the high byte is the message type (0x00 = data message) and bit 0x01 says
+# "has a position". Masking both keeps only data messages that carry a position.
+MESSAGES_WITH_POSITION = 0x0001
+MESSAGE_TYPE_AND_POSITION_MASK = 0xFF01
 
 
 def map_custom_field(raw: dict[str, Any]) -> CustomField:
@@ -90,6 +99,51 @@ class WialonUnitGateway:
             "item/update_custom_field",
             {"itemId": vehicle_id, "id": field_id, "callMode": "delete"},
         )
+
+    async def load_track(
+        self, vehicle_id: int, start: datetime, end: datetime, *, max_messages: int
+    ) -> tuple[list[TrackPoint], int] | None:
+        """Positions between two dates, oldest first, and how many messages Wialon has there.
+
+        `messages/load_interval` loads the messages into the session and returns at most
+        `max_messages` of them; `count` says how many there really are, so the caller can tell
+        when the range was too big. `messages/unload` frees them afterwards.
+        None if the vehicle does not exist or the token cannot see it.
+        """
+        async with self._client.messages_lock:
+            try:
+                result = await self._client.call(
+                    "messages/load_interval",
+                    {
+                        "itemId": vehicle_id,
+                        "timeFrom": int(start.timestamp()),
+                        "timeTo": int(end.timestamp()),
+                        "flags": MESSAGES_WITH_POSITION,
+                        "flagsMask": MESSAGE_TYPE_AND_POSITION_MASK,
+                        "loadCount": max_messages,
+                    },
+                )
+            except WialonError as exc:
+                if exc.code in NOT_FOUND_CODES:
+                    return None
+                raise
+            finally:
+                await self._unload_messages()
+
+        points = [
+            point
+            for point in map(map_message_to_track_point, result.get("messages") or [])
+            if point is not None
+        ]
+        points.sort(key=lambda point: point.time)
+        return points, int(result.get("count") or 0)
+
+    async def _unload_messages(self) -> None:
+        try:
+            await self._client.call("messages/unload", {})
+        except WialonError:
+            # Not freeing them only costs memory in Wialon; the next load replaces them anyway.
+            logger.warning("Could not unload Wialon messages", exc_info=True)
 
     async def _raw_unit(self, vehicle_id: int) -> dict[str, Any] | None:
         try:

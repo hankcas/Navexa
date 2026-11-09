@@ -93,6 +93,12 @@
   height: 18rem;
 }
 
+.historyLink {
+  align-self: flex-start;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
 .fields {
   display: flex;
   flex-direction: column;

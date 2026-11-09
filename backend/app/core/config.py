@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,13 @@ class Settings(BaseSettings):
 
     status_moving_speed_kmh: float = 5.0
     status_offline_minutes: int = 60
+
+    # Route history limits (RF-24): days per request, messages read from Wialon, points sent
+    # to the browser and how many meters the simplified line may move away from the real one.
+    track_max_days: int = Field(default=7, ge=1, le=31)
+    track_max_messages: int = Field(default=50_000, ge=100)
+    track_max_points: int = Field(default=2_000, ge=2)
+    track_tolerance_m: float = Field(default=10.0, gt=0)
     
     first_admin_email: str | None = None
     first_admin_password: str | None = None

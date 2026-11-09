@@ -38,6 +38,9 @@ const VehicleDetailPage = lazy(() =>
     default: module.VehicleDetailPage,
   })),
 )
+const HistoryPage = lazy(() =>
+  import('./features/vehicles/history/HistoryPage').then((module) => ({ default: module.HistoryPage })),
+)
 const DriversPage = lazy(() =>
   import('./features/drivers/DriversPage').then((module) => ({ default: module.DriversPage })),
 )
@@ -77,6 +80,7 @@ export function App() {
                     <Route element={<RequirePermission permission={PERMISSIONS.vehiclesRead} />}>
                       <Route path={PATHS.vehicles} element={<VehiclesPage />} />
                       <Route path={PATHS.vehicleDetail} element={<VehicleDetailPage />} />
+                      <Route path={PATHS.history} element={<HistoryPage />} />
                     </Route>
                     <Route element={<RequirePermission permission={PERMISSIONS.driversRead} />}>
                       <Route path={PATHS.drivers} element={<DriversPage />} />

@@ -1,12 +1,19 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, status
 
-from app.api.dependencies import get_vehicle_fields_service, get_vehicle_service, require_permission
+from app.api.dependencies import (
+    get_track_service,
+    get_vehicle_fields_service,
+    get_vehicle_service,
+    require_permission,
+)
 from app.db.models import User
 from app.domain.permissions import PermissionCode
 from app.domain.vehicle_status import VehicleStatus
 from app.schemas.pagination import Page
+from app.schemas.track import VehicleTrack
 from app.schemas.vehicle import (
     CustomField,
     CustomFieldCreate,
@@ -14,6 +21,7 @@ from app.schemas.vehicle import (
     Vehicle,
     VehicleDetail,
 )
+from app.services.track_service import TrackService
 from app.services.vehicle_fields_service import VehicleFieldsService
 from app.services.vehicle_service import VehicleService
 
@@ -60,6 +68,21 @@ async def get_vehicle(
     service: Annotated[VehicleService, Depends(get_vehicle_service)],
 ) -> VehicleDetail:
     return await service.get_vehicle_detail(vehicle_id)
+
+
+@router.get(
+    "/{vehicle_id}/track",
+    response_model=VehicleTrack,
+    dependencies=[Depends(require_permission(PermissionCode.VEHICLES_READ))],
+)
+async def get_vehicle_track(
+    vehicle_id: VehicleId,
+    service: Annotated[TrackService, Depends(get_track_service)],
+    start: Annotated[datetime, Query(alias="from", description="Inicio del rango (ISO 8601).")],
+    end: Annotated[datetime, Query(alias="to", description="Fin del rango (ISO 8601).")],
+) -> VehicleTrack:
+    """Route between two dates, simplified for drawing and playback (RF-24)."""
+    return await service.get_track(vehicle_id, start, end)
 
 
 @router.post(

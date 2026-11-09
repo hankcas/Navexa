@@ -18,6 +18,7 @@ from app.repositories.user_repository import UserRepository
 from app.services.dashboard_service import DashboardService
 from app.services.driver_service import DriverService
 from app.services.passenger_service import PassengerService
+from app.services.track_service import TrackLimits, TrackService
 from app.services.vehicle_fields_service import VehicleFieldsService
 from app.services.vehicle_service import VehicleService
 
@@ -84,6 +85,19 @@ def _passenger_gateway(request: Request) -> WialonPassengerGateway:
 def get_vehicle_service(request: Request) -> VehicleService:
     return VehicleService(
         _unit_gateway(request), _driver_gateway(request), _passenger_gateway(request)
+    )
+
+
+def get_track_service(request: Request) -> TrackService:
+    return TrackService(
+        _unit_gateway(request),
+        moving_speed_kmh=settings.status_moving_speed_kmh,
+        limits=TrackLimits(
+            max_days=settings.track_max_days,
+            max_messages=settings.track_max_messages,
+            max_points=settings.track_max_points,
+            tolerance_m=settings.track_tolerance_m,
+        ),
     )
 
 

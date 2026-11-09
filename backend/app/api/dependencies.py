@@ -17,6 +17,7 @@ from app.integrations.wialon.units_gateway import WialonUnitGateway
 from app.repositories.user_repository import UserRepository
 from app.services.dashboard_service import DashboardService
 from app.services.driver_service import DriverService
+from app.services.export_service import ExportService
 from app.services.passenger_service import PassengerService
 from app.services.track_service import TrackLimits, TrackService
 from app.services.vehicle_fields_service import VehicleFieldsService
@@ -117,4 +118,14 @@ def get_passenger_service(request: Request, db: DbSession) -> PassengerService:
 def get_dashboard_service(request: Request) -> DashboardService:
     return DashboardService(
         _unit_gateway(request), _driver_gateway(request), _passenger_gateway(request)
+    )
+
+
+def get_export_service(request: Request, db: DbSession) -> ExportService:
+    """The CSV downloads reuse the list services, so the files have the same filters."""
+    return ExportService(
+        get_vehicle_service(request),
+        get_driver_service(request, db),
+        get_passenger_service(request, db),
+        db,
     )

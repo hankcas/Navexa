@@ -373,6 +373,19 @@ La paleta obligatoria está en [`tokens.css`](frontend/src/styles/tokens.css): r
 - Estados de carga, error con "Reintentar" y vacío en todas las pantallas. Si una pantalla falla al dibujarse, un *Error Boundary* muestra un aviso en lugar de una página en blanco.
 - En el celular, la lista y el mapa se alternan con un selector en lugar de apretarse uno al lado del otro.
 
+### Lighthouse (UX-07)
+
+Medido con PageSpeed Insights sobre la landing en producción, el 9 de noviembre de 2026:
+
+| | Rendimiento | Accesibilidad | Recomendaciones | SEO |
+|---|:-:|:-:|:-:|:-:|
+| **Celular** | 100 | 100 | 100 | 91 |
+| **Escritorio** | 100 | 100 | 100 | 91 |
+
+En el celular, el primer contenido aparece a los 0,8 s y la página casi no se mueve mientras carga (CLS 0,011). Lo que le faltaba al SEO era un `robots.txt` válido; se agregó en [`public/robots.txt`](frontend/public/robots.txt) después de esta medición.
+
+![Lighthouse en celular](docs/capturas/lighthouse-movil.png)
+
 ---
 
 ## 8. Transformación de datos

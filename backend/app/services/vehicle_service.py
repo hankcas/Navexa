@@ -3,10 +3,18 @@ import math
 from datetime import datetime, timezone
 from typing import Protocol
 
+from app.core.exceptions import BusinessRuleError
 from app.domain.vehicle_status import VehicleStatus
 from app.schemas.driver import Driver
 from app.schemas.pagination import Page
-from app.schemas.vehicle import Vehicle, VehicleDriver
+from app.schemas.passenger import Passenger
+from app.schemas.vehicle import (
+    CustomField,
+    Vehicle,
+    VehicleDetail,
+    VehicleDriver,
+    VehiclePassenger,
+)
 
 
 class VehicleProvider(Protocol):
@@ -20,6 +28,10 @@ class DriverDirectory(Protocol):
 
 
 _OLDEST = datetime.min.replace(tzinfo=timezone.utc)
+
+
+async def _no_passengers() -> list[Passenger]:
+    return []
 
 
 def assigned_drivers(drivers: list[Driver]) -> dict[int, VehicleDriver]:
@@ -37,10 +49,48 @@ def assigned_drivers(drivers: list[Driver]) -> dict[int, VehicleDriver]:
     }
 
 
+class VehicleCatalog(VehicleProvider, Protocol):
+    """Lists vehicles and also finds one with its custom fields. Only VehicleService needs both;
+    other services keep depending on the smaller VehicleProvider (interface segregation)."""
+
+    async def get_vehicle(self, vehicle_id: int) -> tuple[Vehicle, list[CustomField]] | None: ...
+
+
+class PassengerList(Protocol):
+    async def list_passengers(self) -> list[Passenger]: ...
+
+
 class VehicleService:
-    def __init__(self, provider: VehicleProvider, drivers: DriverDirectory):
+    def __init__(
+        self,
+        provider: VehicleCatalog,
+        drivers: DriverDirectory,
+        passengers: PassengerList | None = None,
+    ):
         self._provider = provider
         self._drivers = drivers
+        self._passengers = passengers
+
+    async def get_vehicle_detail(self, vehicle_id: int) -> VehicleDetail:
+        """Vehicle, its driver, its passengers and its custom fields (RF-12, RF-13, RF-09, RF-19)."""
+        found, drivers, passengers = await asyncio.gather(
+            self._provider.get_vehicle(vehicle_id),
+            self._drivers.list_drivers(),
+            self._passengers.list_passengers() if self._passengers else _no_passengers(),
+        )
+        if found is None:
+            raise BusinessRuleError("El vehículo no existe.", status_code=404, title="No encontrado")
+
+        vehicle, custom_fields = found
+        riding = sorted(
+            (p for p in passengers if p.vehicle_id == vehicle_id), key=lambda p: p.name.lower()
+        )
+        return VehicleDetail(
+            **vehicle.model_dump(exclude={"driver"}),
+            driver=assigned_drivers(drivers).get(vehicle_id),
+            passengers=[VehiclePassenger(id=p.id, name=p.name, code=p.code) for p in riding],
+            custom_fields=custom_fields,
+        )
 
     async def list_vehicles(
         self,

@@ -1,16 +1,35 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from app.integrations.wialon.client import WialonClient
+from app.integrations.wialon.exceptions import WialonError
 from app.integrations.wialon.mappers import map_unit_to_vehicle
-from app.schemas.vehicle import Vehicle
+from app.integrations.wialon.resources import NOT_FOUND_CODES
+from app.schemas.vehicle import CustomField, Vehicle
 
 BASE_DATA_FLAG = 1
+CUSTOM_FIELDS_FLAG = 8
 LAST_POSITION_FLAG = 1024
 UNIT_FLAGS = BASE_DATA_FLAG | LAST_POSITION_FLAG
+UNIT_DETAIL_FLAGS = UNIT_FLAGS | CUSTOM_FIELDS_FLAG
+
+
+def map_custom_field(raw: dict[str, Any]) -> CustomField:
+    modified = raw.get("mt")
+    return CustomField(
+        id=raw["id"],
+        name=str(raw.get("n") or ""),
+        value=str(raw.get("v") or ""),
+        modified_at=(
+            datetime.fromtimestamp(modified, tz=timezone.utc)
+            if isinstance(modified, (int, float)) and modified > 0
+            else None
+        ),
+    )
 
 
 class WialonUnitGateway:
-    """Reads units from Wialon and returns them as our own Vehicle model."""
+    """Reads units from Wialon as our own Vehicle model, and edits their custom fields."""
 
     def __init__(
         self,
@@ -39,11 +58,53 @@ class WialonUnitGateway:
                 "to": 0,
             },
         )
-        return [
-            map_unit_to_vehicle(
-                raw_unit,
-                moving_speed_kmh=self._moving_speed_kmh,
-                offline_after=self._offline_after,
+        return [self._map(raw_unit) for raw_unit in result.get("items", [])]
+
+    async def get_vehicle(self, vehicle_id: int) -> tuple[Vehicle, list[CustomField]] | None:
+        """One vehicle with its custom fields, or None if it does not exist or is not visible."""
+        raw = await self._raw_unit(vehicle_id)
+        if raw is None:
+            return None
+        fields = [map_custom_field(f) for f in (raw.get("flds") or {}).values()]
+        return self._map(raw), sorted(fields, key=lambda field: field.name.lower())
+
+    async def create_custom_field(self, vehicle_id: int, name: str, value: str) -> CustomField:
+        result = await self._client.call(
+            "item/update_custom_field",
+            {"itemId": vehicle_id, "id": 0, "callMode": "create", "n": name, "v": value},
+        )
+        return map_custom_field(result[1])
+
+    async def update_custom_field(
+        self, vehicle_id: int, field_id: int, name: str, value: str
+    ) -> CustomField:
+        # Wialon needs name and value together on update (checked live: error 4 otherwise).
+        result = await self._client.call(
+            "item/update_custom_field",
+            {"itemId": vehicle_id, "id": field_id, "callMode": "update", "n": name, "v": value},
+        )
+        return map_custom_field(result[1])
+
+    async def delete_custom_field(self, vehicle_id: int, field_id: int) -> None:
+        await self._client.call(
+            "item/update_custom_field",
+            {"itemId": vehicle_id, "id": field_id, "callMode": "delete"},
+        )
+
+    async def _raw_unit(self, vehicle_id: int) -> dict[str, Any] | None:
+        try:
+            result = await self._client.call(
+                "core/search_item", {"id": vehicle_id, "flags": UNIT_DETAIL_FLAGS}
             )
-            for raw_unit in result.get("items", [])
-        ]
+        except WialonError as exc:
+            if exc.code in NOT_FOUND_CODES:
+                return None
+            raise
+        return result.get("item")
+
+    def _map(self, raw_unit: dict[str, Any]) -> Vehicle:
+        return map_unit_to_vehicle(
+            raw_unit,
+            moving_speed_kmh=self._moving_speed_kmh,
+            offline_after=self._offline_after,
+        )

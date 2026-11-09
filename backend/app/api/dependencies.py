@@ -18,6 +18,7 @@ from app.repositories.user_repository import UserRepository
 from app.services.dashboard_service import DashboardService
 from app.services.driver_service import DriverService
 from app.services.passenger_service import PassengerService
+from app.services.vehicle_fields_service import VehicleFieldsService
 from app.services.vehicle_service import VehicleService
 
 ACCESS_COOKIE = "access_token"
@@ -81,7 +82,13 @@ def _passenger_gateway(request: Request) -> WialonPassengerGateway:
 
 
 def get_vehicle_service(request: Request) -> VehicleService:
-    return VehicleService(_unit_gateway(request), _driver_gateway(request))
+    return VehicleService(
+        _unit_gateway(request), _driver_gateway(request), _passenger_gateway(request)
+    )
+
+
+def get_vehicle_fields_service(request: Request, db: DbSession) -> VehicleFieldsService:
+    return VehicleFieldsService(_unit_gateway(request), db)
 
 
 def get_driver_service(request: Request, db: DbSession) -> DriverService:

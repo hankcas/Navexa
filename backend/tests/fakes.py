@@ -1,3 +1,4 @@
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 
@@ -23,6 +24,7 @@ class FakeWialonClient:
             for svc, answer in responses.items()
         }
         self.calls: list[tuple[str, dict[str, Any]]] = []
+        self.messages_lock = asyncio.Lock()
 
     async def call(self, svc: str, params: dict[str, Any] | None = None) -> Any:
         self.calls.append((svc, params or {}))

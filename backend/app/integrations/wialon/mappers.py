@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.domain.vehicle_status import derive_status
+from app.schemas.track import TrackPoint
 from app.schemas.vehicle import Position, Vehicle
 
 
@@ -26,6 +27,27 @@ def _to_position(raw_pos: dict[str, Any]) -> Position | None:
         altitude_m=raw_pos.get("z"),
         heading=raw_pos.get("c"),
         satellites=raw_pos.get("sc"),
+    )
+
+
+def map_message_to_track_point(raw_message: dict[str, Any]) -> TrackPoint | None:
+    """A Wialon data message as a route point, or None if its position is not usable.
+
+    Same rules as the vehicle's last position: no coordinates, out of range or (0, 0) are
+    discarded, and so is a message without a valid time.
+    """
+    raw_pos = raw_message.get("pos") or {}
+    position = _to_position(raw_pos) if raw_pos else None
+    time = _to_utc(raw_message.get("t"))
+    if position is None or time is None:
+        return None
+    speed = raw_pos.get("s")
+    return TrackPoint(
+        time=time,
+        latitude=position.latitude,
+        longitude=position.longitude,
+        speed_kmh=speed if isinstance(speed, (int, float)) and speed >= 0 else 0,
+        heading=position.heading,
     )
 
 

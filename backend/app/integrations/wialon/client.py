@@ -24,6 +24,9 @@ class WialonClient:
         self._token = token
         self._sid: str | None = None
         self._lock = asyncio.Lock()
+        # Wialon keeps loaded messages in the session, one set at a time. Everyone shares this
+        # session, so two history requests at once must take turns or they would mix routes.
+        self.messages_lock = asyncio.Lock()
         self._http = httpx.AsyncClient(timeout=timeout)
 
     async def call(self, svc: str, params: dict[str, Any] | None = None) -> Any:
